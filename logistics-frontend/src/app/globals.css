@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+
+html, body {
+  padding: 0;
+  margin: 0;
+  scroll-behavior: smooth;
+  background-color: white;
+  color: #902f3c;
+}
+
+/* globals.css */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+
+@theme {
+  /* Define custom colors */
+  --color-primary: #a83a45;
+  --color-gold: #FFD700;
+
+  /* Define custom font family */
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-gray-900 antialiased;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .btn-primary {
+    @apply px-6 py-3 rounded-full font-semibold transition-all duration-300;
+    background-color: var(--color-primary);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  .btn-secondary {
+    @apply px-5 py-2 rounded-md font-medium transition-all duration-300;
+    background-color: var(--color-gold);
+    color: black;
+  }
+
+  .btn-secondary:hover {
+    filter: brightness(1.1);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 8px var(--color-primary), 0 0 12px var(--color-gold);
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 8px var(--color-primary), 0 0 20px var(--color-gold);
+  }
+
+  .section {
+    @apply py-20 px-4 sm:px-8 lg:px-16;
+  }
+
+  .glass-bg {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .container-xl {
+    @apply max-w-[1440px] mx-auto px-4 sm:px-8;
+  }
+}
