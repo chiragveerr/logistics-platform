@@ -43,11 +43,12 @@ const visualServices = [
 export default function ServicesPage() {
   const [activeServices, setActiveServices] = useState<ServiceType[]>([]);
   const [loading, setLoading] = useState(true);
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/services', { cache: 'no-store', credentials: "include" });
+        const res = await fetch(`${BASE}/api/services`, { cache: 'no-store', credentials: "include" });
         const data = await res.json();
         if (Array.isArray(data.services)) {
           const active = data.services.filter((s: ServiceType) => s.status === 'active');
@@ -64,7 +65,7 @@ export default function ServicesPage() {
     };
 
     fetchServices();
-  }, []);
+  }, [BASE]);
 
   return (
     <main className="bg-white text-[#902f3c] font-sans">

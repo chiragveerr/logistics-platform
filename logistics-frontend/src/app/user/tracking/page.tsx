@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { motion } from 'framer-motion';
-import { toast } from 'react-hot-toast';
 import safeFetch from '@/utils/safeFetch';
 
 interface Shipment {
@@ -27,10 +26,12 @@ function TrackingContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   // 🛩️ Fetch user shipments
   useEffect(() => {
     const fetchUserShipments = async () => {
-      const data = await safeFetch('http://localhost:8000/api/shipments', {
+      const data = await safeFetch(`${BASE}/api/shipments`, {
         credentials: 'include',
       });
 
@@ -40,7 +41,7 @@ function TrackingContent() {
     };
 
     fetchUserShipments();
-  }, []);
+  }, [BASE]);
 
   // 🛰️ Fetch tracking events
   const fetchEvents = async () => {
@@ -52,7 +53,7 @@ function TrackingContent() {
     setError('');
     setLoading(true);
 
-    const data = await safeFetch(`http://localhost:8000/api/tracking/${shipmentId}`, {
+    const data = await safeFetch(`${BASE}/api/tracking/${shipmentId}`, {
       credentials: 'include',
     });
 

@@ -23,14 +23,16 @@ function SupportMessagesContent() {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/contact', {
+        const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const res = await fetch(`${BASE}/api/contact`, {
           credentials: 'include',
         });
 
         if (!res.ok) throw new Error('Failed to fetch messages');
         const data = await res.json();
         setMessages(data.messages || []);
-      } catch (error: any) {
+      } catch (err: unknown) {
+        const error = err as Error;
         console.error('Error fetching messages:', error.message);
         toast.error('Failed to load messages');
         setError('Unable to fetch messages.');
@@ -44,7 +46,8 @@ function SupportMessagesContent() {
 
   const handleDeleteMessage = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/contact/${id}`, {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await fetch(`${BASE}/api/contact/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -53,7 +56,8 @@ function SupportMessagesContent() {
 
       setMessages((prev) => prev.filter((msg) => msg._id !== id));
       toast.success('Message deleted');
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       console.error('Error deleting message:', error.message);
       toast.error('Failed to delete message');
     }
@@ -61,7 +65,8 @@ function SupportMessagesContent() {
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/contact/${id}/status`, {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await fetch(`${BASE}/api/contact/${id}/status`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -77,7 +82,8 @@ function SupportMessagesContent() {
       );
 
       toast.success('Status updated');
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       console.error('Error updating message status:', error.message);
       toast.error('Failed to update status');
     }

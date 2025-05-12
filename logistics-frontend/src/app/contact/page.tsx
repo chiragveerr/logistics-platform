@@ -21,7 +21,8 @@ export default function ContactPage() {
     e.preventDefault();
 
     try {
-      const res = await fetch('/api/contact', {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await fetch(`${BASE}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -31,7 +32,7 @@ export default function ContactPage() {
 
       if (res.ok) {
         toast.success('✅ Message sent successfully!');
-        setForm({ name: '', email: '', phone: '', subject: '', message: '' }); // Clear form
+        setForm({ name: '', email: '', phone: '', subject: '', message: '' });
       } else {
         toast.error('❌ Failed to send message: ' + data.message);
       }
@@ -60,7 +61,7 @@ export default function ContactPage() {
             Contact Us
           </h1>
           <p className="mt-4 text-gray-200 text-lg">
-            We're here to help you move the world.
+            We&apos;re here to help you move the world.
           </p>
         </motion.div>
       </section>

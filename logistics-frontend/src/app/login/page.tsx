@@ -17,6 +17,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -29,7 +31,7 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const data = await safeFetch('http://localhost:8000/api/users/login', {
+    const data = await safeFetch(`${BASE}/api/users/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

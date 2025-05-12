@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import safeFetch from '@/utils/safeFetch';
@@ -12,7 +12,9 @@ interface GoodsType {
   status: string;
 }
 
-const GOODS_OPTIONS = [
+type FilterStatus = 'all' | 'active' | 'inactive';
+
+const GOODS_OPTIONS: string[] = [
   'Carpets',
   'Handicrafts',
   'Leather Goods',
@@ -38,15 +40,12 @@ export default function AdminGoodsPage() {
   const [currentGoods, setCurrentGoods] = useState<GoodsType | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filter, setFilter] = useState<FilterStatus>('all');
 
-  useEffect(() => {
-    fetchGoods();
-  }, [filter]);
-
-  const fetchGoods = async () => {
+  const fetchGoods = useCallback(async () => {
     setLoading(true);
-    const data = await safeFetch('http://localhost:8000/api/goods');
+    const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const data = await safeFetch(`${BASE}/api/goods`);
     if (!data) return;
 
     const all = data.types || [];
@@ -59,11 +58,16 @@ export default function AdminGoodsPage() {
 
     setGoods(filtered);
     setLoading(false);
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchGoods();
+  }, [fetchGoods]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await safeFetch('http://localhost:8000/api/goods', {
+    const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const res = await safeFetch(`${BASE}/api/goods`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -82,7 +86,8 @@ export default function AdminGoodsPage() {
     e.preventDefault();
     if (!currentGoods) return;
 
-    const res = await safeFetch(`http://localhost:8000/api/goods/${currentGoods._id}`, {
+    const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const res = await safeFetch(`${BASE}/api/goods/${currentGoods._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -102,7 +107,8 @@ export default function AdminGoodsPage() {
   };
 
   const toggleStatus = async (id: string, status: string) => {
-    const res = await safeFetch(`http://localhost:8000/api/goods/${id}`, {
+    const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const res = await safeFetch(`${BASE}/api/goods/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -118,7 +124,8 @@ export default function AdminGoodsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this goods type?')) return;
 
-    const res = await safeFetch(`http://localhost:8000/api/goods/${id}`, {
+    const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const res = await safeFetch(`${BASE}/api/goods/${id}`, {
       method: 'DELETE',
       credentials: 'include',
     });
@@ -154,12 +161,13 @@ export default function AdminGoodsPage() {
   return (
     <ProtectedRoute adminOnly>
       <div className="p-6 space-y-10 mt-6">
+        {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-3xl font-bold text-[#ffcc00]">Goods Type Management</h1>
           <div className="flex gap-4 items-center">
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value as any)}
+              onChange={(e) => setFilter(e.target.value as FilterStatus)}
               className="p-2 bg-[#1b1b1b] border border-gray-700 text-white rounded-md"
             >
               <option value="all">Show All</option>
@@ -175,103 +183,100 @@ export default function AdminGoodsPage() {
           </div>
         </div>
 
-       
-
-{/* Form Modal */}
-{(showCreateForm || showEditForm) && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <form
-      onSubmit={showCreateForm ? handleCreate : handleEdit}
-      className="bg-[#1b1b1b] text-white p-8 rounded-2xl border border-gray-700 shadow-2xl space-y-6 w-full max-w-lg"
-    >
-      <h2 className="text-2xl font-bold mb-4 text-[#ffcc00]">
-        {showCreateForm ? 'Create New Goods Type' : 'Edit Goods Type'}
-      </h2>
-
-      {showCreateForm && (
-        <>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="customToggle"
-              checked={isCustom}
-              onChange={(e) => setIsCustom(e.target.checked)}
-              className="accent-[#902f3c]"
-            />
-            <label htmlFor="customToggle" className="text-sm font-medium text-white">
-              Enter Custom Goods Type
-            </label>
-          </div>
-
-          {!isCustom ? (
-            <select
-              onChange={(e) => setName(e.target.value)}
-              value={name}
-              className="w-full bg-[#1b1b1b] text-white border border-gray-600 rounded-lg px-4 py-3 mb-4"
+        {/* Form Modal */}
+        {(showCreateForm || showEditForm) && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <form
+              onSubmit={showCreateForm ? handleCreate : handleEdit}
+              className="bg-[#1b1b1b] text-white p-8 rounded-2xl border border-gray-700 shadow-2xl space-y-6 w-full max-w-lg"
             >
-              <option value="">Select Standard Goods</option>
-              {GOODS_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type="text"
-              placeholder="Custom Goods Type Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full bg-[#1b1b1b] text-white border border-gray-600 rounded-lg px-4 py-3"
-            />
-          )}
-        </>
-      )}
+              <h2 className="text-2xl font-bold mb-4 text-[#ffcc00]">
+                {showCreateForm ? 'Create New Goods Type' : 'Edit Goods Type'}
+              </h2>
 
-      {!showCreateForm && (
-        <input
-          type="text"
-          placeholder="Goods Type Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="w-full bg-[#1b1b1b] text-white border border-gray-600 rounded-lg px-4 py-3"
-        />
-      )}
+              {showCreateForm && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="customToggle"
+                      checked={isCustom}
+                      onChange={(e) => setIsCustom(e.target.checked)}
+                      className="accent-[#902f3c]"
+                    />
+                    <label htmlFor="customToggle" className="text-sm font-medium text-white">
+                      Enter Custom Goods Type
+                    </label>
+                  </div>
 
-      <textarea
-        placeholder="Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={3}
-        required
-        className="w-full bg-[#1b1b1b] text-white border border-gray-600 rounded-lg px-4 py-3"
-      ></textarea>
+                  {!isCustom ? (
+                    <select
+                      onChange={(e) => setName(e.target.value)}
+                      value={name}
+                      className="w-full bg-[#1b1b1b] text-white border border-gray-600 rounded-lg px-4 py-3 mb-4"
+                    >
+                      <option value="">Select Standard Goods</option>
+                      {GOODS_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Custom Goods Type Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="w-full bg-[#1b1b1b] text-white border border-gray-600 rounded-lg px-4 py-3"
+                    />
+                  )}
+                </>
+              )}
 
-      <div className="flex gap-4">
-        <button
-          type="submit"
-          className="bg-[#902f3c] text-white px-6 py-2 rounded-lg hover:bg-[#7e2632] transition w-full"
-        >
-          {showCreateForm ? 'Submit' : 'Update'}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setShowCreateForm(false);
-            setShowEditForm(false);
-            resetForm();
-          }}
-          className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition w-full"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  </div>
-)}
+              {!showCreateForm && (
+                <input
+                  type="text"
+                  placeholder="Goods Type Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full bg-[#1b1b1b] text-white border border-gray-600 rounded-lg px-4 py-3"
+                />
+              )}
 
+              <textarea
+                placeholder="Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                required
+                className="w-full bg-[#1b1b1b] text-white border border-gray-600 rounded-lg px-4 py-3"
+              />
+
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  className="bg-[#902f3c] text-white px-6 py-2 rounded-lg hover:bg-[#7e2632] transition w-full"
+                >
+                  {showCreateForm ? 'Submit' : 'Update'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setShowEditForm(false);
+                    resetForm();
+                  }}
+                  className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition w-full"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Goods Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

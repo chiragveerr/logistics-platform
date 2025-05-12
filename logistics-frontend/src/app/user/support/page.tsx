@@ -10,11 +10,12 @@ export default function SupportPage() {
   const [formData, setFormData] = useState({ phone: '', subject: '', message: '' });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // 🔐 Fetch user using safeFetch
   useEffect(() => {
     const fetchUser = async () => {
-      const data = await safeFetch('http://localhost:8000/api/users/profile', {
+      const data = await safeFetch(`${BASE}/api/users/profile`, {
         credentials: 'include',
       });
 
@@ -28,7 +29,7 @@ export default function SupportPage() {
     };
 
     fetchUser();
-  }, [router]);
+  }, [router, BASE]);
 
   // 📝 Form change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -45,7 +46,7 @@ export default function SupportPage() {
       email: user?.email,
     };
 
-    const result = await safeFetch('http://localhost:8000/api/contact', {
+    const result = await safeFetch(`${BASE}/api/contact`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

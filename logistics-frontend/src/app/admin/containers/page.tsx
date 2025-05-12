@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import safeFetch from "@/utils/safeFetch";
@@ -167,9 +167,7 @@ const STANDARD_CONTAINERS: Omit<ContainerType, "_id" | "status">[] = [
 
 export default function AdminContainersPage() {
   const [containers, setContainers] = useState<ContainerType[]>([]);
-  const [newContainer, setNewContainer] = useState<
-    Omit<ContainerType, "_id" | "status">
-  >({
+  const [newContainer, setNewContainer] = useState<Omit<ContainerType, "_id" | "status">>({
     name: "",
     description: "",
     dimensions: {
@@ -183,15 +181,14 @@ export default function AdminContainersPage() {
     tareWeight: 0,
     maxCargoWeight: 0,
   });
+
   const [showForm, setShowForm] = useState(false);
   const [isCustom, setIsCustom] = useState(false);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
 
-  const fetchContainers = async () => {
+  const fetchContainers = useCallback(async () => {
     const query = filter === "all" ? "?showAll=true" : "";
-    const data = await safeFetch(
-      `http://localhost:8000/api/containers${query}`
-    );
+    const data = await safeFetch(`http://localhost:8000/api/containers${query}`);
     if (!data) return;
 
     const all = data.types || [];
@@ -203,24 +200,21 @@ export default function AdminContainersPage() {
         : all;
 
     setContainers(filtered);
-  };
-
-  useEffect(() => {
-    fetchContainers();
   }, [filter]);
 
   useEffect(() => {
+    fetchContainers();
+  }, [fetchContainers]);
+
+  useEffect(() => {
     if (!isCustom && newContainer.name) {
-      const match = STANDARD_CONTAINERS.find(
-        (c) => c.name === newContainer.name
-      );
+      const match = STANDARD_CONTAINERS.find((c) => c.name === newContainer.name);
       if (match) setNewContainer(match);
     }
   }, [newContainer.name, isCustom]);
 
   const handleCreate = async () => {
-    const { name, description, dimensions, tareWeight, maxCargoWeight } =
-      newContainer;
+    const { name, description, dimensions, tareWeight, maxCargoWeight } = newContainer;
 
     if (
       !name ||
@@ -292,15 +286,14 @@ export default function AdminContainersPage() {
   return (
     <ProtectedRoute adminOnly>
       <div className="p-6 space-y-10 mt-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-3xl font-bold text-[#ffcc00]">
-            Container Management
-          </h1>
+          <h1 className="text-3xl font-bold text-[#ffcc00]">Container Management</h1>
           <div className="flex gap-4 items-center">
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value as any)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setFilter(e.target.value as "all" | "active" | "inactive")
+              }
               className="p-2 bg-[#1b1b1b] border border-gray-700 text-white rounded-md"
             >
               <option value="all">Show All</option>
@@ -316,7 +309,6 @@ export default function AdminContainersPage() {
           </div>
         </div>
 
-        {/* Create Form */}
         {showForm && (
           <div className="bg-[#111] p-6 rounded-xl border border-gray-700 space-y-4">
             <div className="flex items-center gap-2">
@@ -326,10 +318,7 @@ export default function AdminContainersPage() {
                 checked={isCustom}
                 onChange={(e) => setIsCustom(e.target.checked)}
               />
-              <label
-                htmlFor="customToggle"
-                className="text-sm font-medium text-white"
-              >
+              <label htmlFor="customToggle" className="text-sm font-medium text-white">
                 Enter Custom Container
               </label>
             </div>
@@ -443,7 +432,6 @@ export default function AdminContainersPage() {
           </div>
         )}
 
-        {/* Container Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {containers.map((container) => (
             <div

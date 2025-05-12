@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function AboutPage() {
@@ -8,9 +9,12 @@ export default function AboutPage() {
     <div className="min-h-screen bg-white text-gray-800">
       {/* 🌟 Hero Section with Background Image */}
       <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/aboutHero-bg.jpg')" }}
+        <Image
+          src="/aboutHero-bg.jpg"
+          alt="About Us Background"
+          fill
+          priority
+          className="absolute object-cover object-center"
         />
         <div className="absolute inset-0 bg-black/60" />
         <motion.div
@@ -20,13 +24,9 @@ export default function AboutPage() {
           className="relative z-10 px-6"
         >
           <h1 className="text-4xl md:text-6xl font-extrabold text-white">
-            48+ Years of Excellence <br /> in Customs Clearance & Freight
-            Forwarding
+            48+ Years of Excellence <br /> in Customs Clearance & Freight Forwarding
           </h1>
-          <p className="mt-4 text-lg text-gray-300">
-            Empowering Global Trade Since 1976.
-          </p>
-
+          <p className="mt-4 text-lg text-gray-300">Empowering Global Trade Since 1976.</p>
         </motion.div>
       </section>
 
@@ -210,9 +210,11 @@ export default function AboutPage() {
           transition={{ duration: 0.6 }}
           className="flex flex-col items-center gap-4"
         >
-          <img
+          <Image
             src="/founder-placeholder.jpg"
             alt="Meraj Ansari"
+            width={96}
+            height={96}
             className="w-24 h-24 rounded-full object-cover border-2 border-[#902f3c]"
           />
           <h3 className="text-xl font-semibold">Meraj Ansari</h3>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,155 +7,159 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import safeFetch from '@/utils/safeFetch';
 
 interface Shipment {
-_id: string;
-trackingNumber: string;
-status: string;
-pickupLocation?: { name: string };
-dropOffLocation?: { name: string };
-estimatedDeliveryDate?: string;
+  _id: string;
+  trackingNumber: string;
+  status: string;
+  pickupLocation?: { name: string };
+  dropOffLocation?: { name: string };
+  estimatedDeliveryDate?: string;
 }
 
 interface Location {
-_id: string;
-name: string;
-type: 'pickup' | 'drop-off';
-status?: string;
+  _id: string;
+  name: string;
+  type: 'pickup' | 'drop-off';
+  status?: string;
 }
 
 interface Quote {
-_id: string;
-pickupLocation?: { _id: string; name: string };
-dropLocation?: { _id: string; name: string };
-status: string;
+  _id: string;
+  pickupLocation?: { _id: string; name: string };
+  dropLocation?: { _id: string; name: string };
+  status: string;
 }
 
 interface GoodsType {
-_id: string;
-name: string;
-status?: string;
+  _id: string;
+  name: string;
+  status?: string;
 }
 
 interface ContainerType {
-_id: string;
-name: string;
-status?: string;
+  _id: string;
+  name: string;
+  status?: string;
 }
 
 const statusOptions = ['pending', 'shipped', 'in-transit', 'delivered'];
 
 function ShipmentsContent() {
-const [shipments, setShipments] = useState<Shipment[]>([]);
-const [pickupLocations, setPickupLocations] = useState<Location[]>([]);
-const [dropOffLocations, setDropOffLocations] = useState<Location[]>([]);
-const [quotes, setQuotes] = useState<Quote[]>([]);
-const [goodsTypes, setGoodsTypes] = useState<GoodsType[]>([]);
-const [containerTypes, setContainerTypes] = useState<ContainerType[]>([]);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState('');
-const [newShipment, setNewShipment] = useState({
-quoteRequestId: '',
-trackingNumber: '',
-pickupLocation: '',
-dropOffLocation: '',
-goodsType: '',
-containerType: '',
-estimatedDeliveryDate: '',
-});
-
-useEffect(() => {
-const fetchData = async () => {
-  try {
-    const [shipmentsData, locationsData, quotesData, goodsData, containersData] = await Promise.all([
-      safeFetch('http://localhost:8000/api/shipments'),
-      safeFetch('http://localhost:8000/api/locations?showAll=true'),
-      safeFetch('http://localhost:8000/api/quotes'),
-      safeFetch('http://localhost:8000/api/goods?showAll=true'),
-      safeFetch('http://localhost:8000/api/containers?showAll=true'),
-    ]);
-
-    setShipments(shipmentsData?.shipments || []);
-
-    const activeLocations = (locationsData?.locations || []).filter((loc: Location) => loc.status === 'active');
-    setPickupLocations(activeLocations.filter((loc: Location) => loc.type === 'pickup'));
-    setDropOffLocations(activeLocations.filter((loc: Location) => loc.type === 'drop-off'));
-
-    const quoted = (quotesData?.quotes || []).filter((q: Quote) => q.status === 'Quoted');
-    setQuotes(quoted);
-
-    setGoodsTypes((goodsData?.types || []).filter((g: GoodsType) => g.status === 'active'));
-    setContainerTypes((containersData?.types || []).filter((c: ContainerType) => c.status === 'active'));
-  } catch (err) {
-    toast.error('Failed to load data');
-    setError('Could not fetch shipments or related data.');
-  } finally {
-    setLoading(false);
-  }
-};
-
-fetchData();
-}, []);
-
-const handleCreateShipment = async () => {
-const { quoteRequestId, trackingNumber, pickupLocation, dropOffLocation, goodsType, containerType } = newShipment;
-
-if (!quoteRequestId || !pickupLocation || !dropOffLocation || !trackingNumber || !goodsType || !containerType) {
-  setError('⚠️ All fields are required.');
-  return;
-}
-
-try {
-  const data = await safeFetch('http://localhost:8000/api/shipments', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(newShipment),
+  const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [pickupLocations, setPickupLocations] = useState<Location[]>([]);
+  const [dropOffLocations, setDropOffLocations] = useState<Location[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [goodsTypes, setGoodsTypes] = useState<GoodsType[]>([]);
+  const [containerTypes, setContainerTypes] = useState<ContainerType[]>([]);
+  const [error, setError] = useState('');
+  const [newShipment, setNewShipment] = useState({
+    quoteRequestId: '',
+    trackingNumber: '',
+    pickupLocation: '',
+    dropOffLocation: '',
+    goodsType: '',
+    containerType: '',
+    estimatedDeliveryDate: '',
   });
 
-  if (data?.shipment) {
-    setShipments((prev) => [...prev, data.shipment]);
-    toast.success('Shipment created');
-    setNewShipment({
-      quoteRequestId: '',
-      trackingNumber: '',
-      pickupLocation: '',
-      dropOffLocation: '',
-      goodsType: '',
-      containerType: '',
-      estimatedDeliveryDate: '',
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+        const [shipmentsData, locationsData, quotesData, goodsData, containersData] = await Promise.all([
+          safeFetch(`${BASE}/api/shipments`),
+          safeFetch(`${BASE}/api/locations?showAll=true`),
+          safeFetch(`${BASE}/api/quotes`),
+          safeFetch(`${BASE}/api/goods?showAll=true`),
+          safeFetch(`${BASE}/api/containers?showAll=true`),
+        ]);
+
+        setShipments(shipmentsData?.shipments || []);
+
+        const activeLocations = (locationsData?.locations || []).filter((loc: Location) => loc.status === 'active');
+        setPickupLocations(activeLocations.filter((loc: Location) => loc.type === 'pickup'));
+        setDropOffLocations(activeLocations.filter((loc: Location) => loc.type === 'drop-off'));
+
+        const quoted = (quotesData?.quotes || []).filter((q: Quote) => q.status === 'Quoted');
+        setQuotes(quoted);
+
+        setGoodsTypes((goodsData?.types || []).filter((g: GoodsType) => g.status === 'active'));
+        setContainerTypes((containersData?.types || []).filter((c: ContainerType) => c.status === 'active'));
+      } catch (error: unknown) {
+        const err = error as Error;
+        toast.error('Failed to load data');
+        setError(err.message || 'Could not fetch shipments or related data.');
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleCreateShipment = async () => {
+    const { quoteRequestId, trackingNumber, pickupLocation, dropOffLocation, goodsType, containerType } = newShipment;
+
+    if (!quoteRequestId || !pickupLocation || !dropOffLocation || !trackingNumber || !goodsType || !containerType) {
+      setError('⚠️ All fields are required.');
+      return;
+    }
+
+    try {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const data = await safeFetch(`${BASE}/api/shipments`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newShipment),
+      });
+
+      if (data?.shipment) {
+        setShipments((prev) => [...prev, data.shipment]);
+        toast.success('Shipment created');
+        setNewShipment({
+          quoteRequestId: '',
+          trackingNumber: '',
+          pickupLocation: '',
+          dropOffLocation: '',
+          goodsType: '',
+          containerType: '',
+          estimatedDeliveryDate: '',
+        });
+      }
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast.error(err.message || 'Error creating shipment');
+    }
+  };
+
+  const handleDeleteShipment = async (id: string) => {
+    const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const res = await safeFetch(`${BASE}/api/shipments/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
     });
-  }
-} catch (err: any) {
-  toast.error(err.message || 'Error creating shipment');
-}
-};
 
-const handleDeleteShipment = async (id: string) => {
-const res = await safeFetch(`http://localhost:8000/api/shipments/${id}`, {
-  method: 'DELETE',
-  credentials: 'include',
-});
+    if (res) {
+      setShipments((prev) => prev.filter((s) => s._id !== id));
+      toast.success('Shipment deleted');
+    }
+  };
 
-if (res) {
-  setShipments((prev) => prev.filter((s) => s._id !== id));
-  toast.success('Shipment deleted');
-}
-};
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const res = await safeFetch(`${BASE}/api/shipments/${id}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    });
 
-const handleUpdateStatus = async (id: string, newStatus: string) => {
-const res = await safeFetch(`http://localhost:8000/api/shipments/${id}`, {
-  method: 'PUT',
-  credentials: 'include',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ status: newStatus }),
-});
-
-if (res) {
-  setShipments((prev) =>
-    prev.map((s) => (s._id === id ? { ...s, status: newStatus } : s))
-  );
-  toast.success('Status updated');
-}
-};
+    if (res) {
+      setShipments((prev) =>
+        prev.map((s) => (s._id === id ? { ...s, status: newStatus } : s))
+      );
+      toast.success('Status updated');
+    }
+  };
 
   return (
     <section className="p-4 md:p-6 lg:p-10">
@@ -177,7 +180,6 @@ if (res) {
         )}
 
         <div className="flex flex-col gap-4">
-          {/* Quote Selection */}
           <select
             value={newShipment.quoteRequestId}
             onChange={(e) => {
@@ -327,7 +329,7 @@ if (res) {
     </section>
   );
 }
- 
+
 export default function AdminShipmentsPage() {
   return (
     <ProtectedRoute adminOnly>

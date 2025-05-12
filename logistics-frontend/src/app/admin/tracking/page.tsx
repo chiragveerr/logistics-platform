@@ -44,22 +44,22 @@ export default function AdminTrackingPage() {
     remarks: '',
   });
 
-  // 🛰️ Fetch shipments for dropdown
   const fetchShipments = async () => {
     try {
-      const data = await safeFetch('http://localhost:8000/api/shipments');
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const data = await safeFetch(`${BASE}/api/shipments`);
       setShipments(data.shipments || []);
     } catch {
       toast.error('Failed to fetch shipments');
     }
   };
 
-  // 📍 Fetch events by shipment
   const fetchTrackingEvents = async () => {
     if (!shipmentId) return toast.error('Select a shipment first');
     setLoading(true);
     try {
-      const data = await safeFetch(`http://localhost:8000/api/tracking/${shipmentId}`);
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const data = await safeFetch(`${BASE}/api/tracking/${shipmentId}`);
       setEvents(data.events || []);
     } catch {
       toast.error('Failed to fetch tracking events');
@@ -68,7 +68,6 @@ export default function AdminTrackingPage() {
     }
   };
 
-  // ➕ Create tracking event
   const handleCreateEvent = async () => {
     const { event, location, status, eventTime } = newEvent;
     if (!shipmentId || !event || !location || !status || !eventTime) {
@@ -76,7 +75,8 @@ export default function AdminTrackingPage() {
     }
 
     try {
-      const data = await safeFetch('http://localhost:8000/api/tracking', {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const data = await safeFetch(`${BASE}/api/tracking`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -88,8 +88,9 @@ export default function AdminTrackingPage() {
       toast.success('Tracking event created');
       setEvents((prev) => [...prev, data.trackingEvent]);
       setNewEvent({ event: '', location: '', status: '', eventTime: '', remarks: '' });
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create tracking event');
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error(error.message || 'Failed to create tracking event');
     }
   };
 
@@ -102,7 +103,6 @@ export default function AdminTrackingPage() {
       <section className="p-6 md:p-10">
         <h1 className="text-4xl font-bold text-[#ffcc00] text-center mb-8">📍 Manage Tracking Events</h1>
 
-        {/* Shipment Selection */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <select
             value={shipmentId}
@@ -124,7 +124,6 @@ export default function AdminTrackingPage() {
           </button>
         </div>
 
-        {/* Create Event Form */}
         {shipmentId && (
           <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-700 mb-10">
             <h2 className="text-xl font-bold text-white mb-4">➕ Create Tracking Event</h2>
@@ -175,7 +174,6 @@ export default function AdminTrackingPage() {
           </div>
         )}
 
-        {/* Event Table */}
         {loading ? (
           <div className="text-center text-white">Loading events...</div>
         ) : (

@@ -26,7 +26,8 @@ function QuotesContent() {
   useEffect(() => {
     const fetchQuotes = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/quotes', {
+        const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const res = await fetch(`${BASE}/api/quotes`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -34,8 +35,9 @@ function QuotesContent() {
         if (!res.ok) throw new Error('Failed to fetch quotes');
         const data = await res.json();
         setQuotes(data.quotes || []);
-      } catch (error: any) {
-        console.error('Error fetching quotes:', error.message);
+      } catch (error: unknown) {
+        const err = error as Error;
+        console.error('Error fetching quotes:', err.message);
         toast.error('Failed to load quotes');
       } finally {
         setLoading(false);
@@ -47,7 +49,8 @@ function QuotesContent() {
 
   const handleUpdate = async (id: string, newStatus: string, finalPrice?: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/quotes/${id}`, {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await fetch(`${BASE}/api/quotes/${id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -62,8 +65,9 @@ function QuotesContent() {
 
       toast.success('Quote updated');
       setQuotes(updatedQuotes);
-    } catch (error: any) {
-      console.error('Error updating quote:', error.message);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Error updating quote:', err.message);
       toast.error('Failed to update quote');
     }
   };

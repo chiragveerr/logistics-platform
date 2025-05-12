@@ -21,12 +21,13 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // 🧠 Fetch user profile on app load
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/users/profile', {
+        const res = await fetch(`${BASE}/api/users/profile`, {
           credentials: 'include',
         });
         const data = await res.json();
@@ -45,12 +46,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     fetchUser();
-  }, []);
+  }, [BASE]);
 
   // 🧠 Secure and Clean Logout
   const logout = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/users/logout', {
+      const res = await fetch(`${BASE}/api/users/logout`, {
         method: 'POST',
         credentials: 'include',
       });

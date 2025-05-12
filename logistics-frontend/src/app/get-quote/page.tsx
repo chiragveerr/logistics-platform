@@ -25,6 +25,8 @@ interface ContainerType {
 }
 
 export default function CreateQuotePage() {
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const [pickupLocations, setPickupLocations] = useState<LocationType[]>([]);
   const [dropLocations, setDropLocations] = useState<LocationType[]>([]);
   const [goodsTypes, setGoodsTypes] = useState<GoodsType[]>([]);
@@ -42,9 +44,9 @@ export default function CreateQuotePage() {
 
   useEffect(() => {
     const fetchActiveData = async () => {
-      const locData = await safeFetch('http://localhost:8000/api/locations');
-      const goodsData = await safeFetch('http://localhost:8000/api/goods');
-      const containerData = await safeFetch('http://localhost:8000/api/containers');
+      const locData = await safeFetch(`${BASE}/api/locations`);
+      const goodsData = await safeFetch(`${BASE}/api/goods`);
+      const containerData = await safeFetch(`${BASE}/api/containers`);
 
       if (locData?.locations) {
         const pickup = locData.locations.filter(
@@ -67,7 +69,7 @@ export default function CreateQuotePage() {
     };
 
     fetchActiveData();
-  }, []);
+  }, [BASE]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +98,7 @@ export default function CreateQuotePage() {
       },
     };
 
-    const res = await safeFetch('http://localhost:8000/api/quotes', {
+    const res = await safeFetch(`${BASE}/api/quotes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -130,7 +132,6 @@ export default function CreateQuotePage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Pickup Location */}
           <select value={pickupLocation} onChange={(e) => setPickupLocation(e.target.value)} required className="w-full border border-gray-300 rounded-lg px-4 py-3">
             <option value="">Select Pickup Location</option>
             {pickupLocations.map((loc) => (
@@ -138,7 +139,6 @@ export default function CreateQuotePage() {
             ))}
           </select>
 
-          {/* Drop Location */}
           <select value={dropLocation} onChange={(e) => setDropLocation(e.target.value)} required className="w-full border border-gray-300 rounded-lg px-4 py-3">
             <option value="">Select Drop Location</option>
             {dropLocations.map((loc) => (
@@ -146,7 +146,6 @@ export default function CreateQuotePage() {
             ))}
           </select>
 
-          {/* Goods Type */}
           <select value={goodsType} onChange={(e) => setGoodsType(e.target.value)} required className="w-full border border-gray-300 rounded-lg px-4 py-3">
             <option value="">Select Goods Type</option>
             {goodsTypes.map((g) => (
@@ -166,7 +165,6 @@ export default function CreateQuotePage() {
             />
           )}
 
-          {/* Container Type */}
           <select value={containerType} onChange={(e) => setContainerType(e.target.value)} required className="w-full border border-gray-300 rounded-lg px-4 py-3">
             <option value="">Select Container Type</option>
             {containerTypes.map((c) => (
@@ -174,7 +172,6 @@ export default function CreateQuotePage() {
             ))}
           </select>
 
-          {/* Dimensions */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {['length', 'width', 'height', 'weight'].map((dim) => (
               <input
@@ -189,7 +186,6 @@ export default function CreateQuotePage() {
             ))}
           </div>
 
-          {/* Payment Term */}
           <select value={paymentTerm} onChange={(e) => setPaymentTerm(e.target.value)} required className="w-full border border-gray-300 rounded-lg px-4 py-3">
             <option value="">Select Payment Term</option>
             <option value="Prepaid">Prepaid</option>
@@ -197,7 +193,6 @@ export default function CreateQuotePage() {
             <option value="Third Party">Third Party</option>
           </select>
 
-          {/* Additional Notes */}
           <textarea
             placeholder="Additional Notes (optional)"
             value={additionalNotes}
@@ -206,7 +201,6 @@ export default function CreateQuotePage() {
             rows={4}
           ></textarea>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}

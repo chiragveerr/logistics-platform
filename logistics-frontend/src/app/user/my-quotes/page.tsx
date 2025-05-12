@@ -22,7 +22,8 @@ export default function MyQuotesPage() {
 
   useEffect(() => {
     const fetchQuotes = async () => {
-      const data = await safeFetch('http://localhost:8000/api/quotes/my', {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const data = await safeFetch(`${BASE}/api/quotes/my`, {
         credentials: 'include',
       });
 
@@ -44,7 +45,7 @@ export default function MyQuotesPage() {
   return (
     <div className="text-white">
       <h1 className="text-3xl font-semibold mb-4">My Quotes 📦</h1>
-      <p className="text-zinc-400 mb-6">Here's a list of all your shipping quote requests.</p>
+      <p className="text-zinc-400 mb-6">Here&apos;s a list of all your shipping quote requests.</p>
 
       {quotes.length === 0 ? (
         <div className="text-zinc-400 text-center py-20">No quote requests found.</div>

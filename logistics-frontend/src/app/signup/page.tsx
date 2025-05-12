@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,7 +33,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const res = await safeFetch('http://localhost:8000/api/users/register', {
+    const res = await safeFetch(`${BASE}/api/users/register`, {
       method: 'POST',
       body: JSON.stringify(form),
     });

@@ -20,10 +20,11 @@ function ShipmentsContent() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     const fetchUserShipments = async () => {
-      const data = await safeFetch('http://localhost:8000/api/shipments', {
+      const data = await safeFetch(`${BASE}/api/shipments`, {
         credentials: 'include',
       });
 
@@ -38,7 +39,7 @@ function ShipmentsContent() {
     };
 
     fetchUserShipments();
-  }, []);
+  }, [BASE]);
 
   if (loading) {
     return (

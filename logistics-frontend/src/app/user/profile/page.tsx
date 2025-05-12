@@ -24,10 +24,11 @@ function ProfileContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const data = await safeFetch('http://localhost:8000/api/users/profile', {
+      const data = await safeFetch(`${BASE}/api/users/profile`, {
         credentials: 'include',
       });
 
@@ -42,12 +43,12 @@ function ProfileContent() {
     };
 
     fetchProfile();
-  }, []);
+  }, [BASE]);
 
   const handleUpdate = async () => {
     setSaving(true);
 
-    const data = await safeFetch('http://localhost:8000/api/users/profile', {
+    const data = await safeFetch(`${BASE}/api/users/profile`, {
       method: 'PUT',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

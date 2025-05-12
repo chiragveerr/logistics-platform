@@ -6,7 +6,6 @@ import { FaShippingFast, FaQuoteRight } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import safeFetch from '@/utils/safeFetch';
 
-type Quote = { _id: string; status: string };
 type Shipment = { _id: string; status: string };
 
 export default function DashboardPage() {
@@ -18,7 +17,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const userData = await safeFetch('http://localhost:8000/api/users/profile', {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+      const userData = await safeFetch(`${BASE}/api/users/profile`, {
         credentials: 'include',
       });
 
@@ -30,12 +31,12 @@ export default function DashboardPage() {
 
       setUserName(userData.user.name);
 
-      const quoteData = await safeFetch('http://localhost:8000/api/quotes/my', {
+      const quoteData = await safeFetch(`${BASE}/api/quotes/my`, {
         credentials: 'include',
       });
       setQuoteCount(quoteData?.quotes?.length || 0);
 
-      const shipmentData = await safeFetch('http://localhost:8000/api/shipments', {
+      const shipmentData = await safeFetch(`${BASE}/api/shipments`, {
         credentials: 'include',
       });
       const userShipments = shipmentData?.shipments?.filter((s: Shipment) => s._id);

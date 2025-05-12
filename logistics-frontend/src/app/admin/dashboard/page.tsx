@@ -45,41 +45,40 @@ function DashboardContent() {
   const [latestMessages, setLatestMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const safeFetch = async (url: string) => {
+  const safeFetch = async (url: string): Promise<unknown> => {
     try {
       const res = await fetch(url, {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
-  
-      // Step 1: Check content type safely
+
       const contentType = res.headers.get('content-type') || '';
       let data;
-  
-      // Step 2: Try to parse correctly
+
       if (contentType.includes('application/json')) {
         data = await res.json();
       } else {
         const text = await res.text();
         throw new Error(`❌ Server responded with non-JSON: ${text.slice(0, 100)}...`);
       }
-  
-      // Step 3: Handle HTTP errors cleanly
+
       if (!res.ok) {
         throw new Error(data.message || `❌ Failed to fetch ${url}`);
       }
-  
+
       return data;
-    } catch (err: any) {
-      console.error(`🔴 Error fetching ${url}:`, err);
-      toast.error(err.message || `Failed to load ${url.split('/api/')[1] || 'data'}`);
+    } catch (err) {
+      const error = err as Error;
+      console.error(`🔴 Error fetching ${url}:`, error);
+      toast.error(error.message || `Failed to load ${url.split('/api/')[1] || 'data'}`);
       return null;
     }
   };
-  
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
       const [
         quotesData,
         shipmentsData,
@@ -89,28 +88,28 @@ function DashboardContent() {
         goodsTypesData,
         containerTypesData,
       ] = await Promise.all([
-        safeFetch('http://localhost:8000/api/quotes'),
-        safeFetch('http://localhost:8000/api/shipments'),
-        safeFetch('http://localhost:8000/api/services'),
-        safeFetch('http://localhost:8000/api/contact'),
-        safeFetch('http://localhost:8000/api/locations'),
-        safeFetch('http://localhost:8000/api/goods'),
-        safeFetch('http://localhost:8000/api/containers'),
+        safeFetch(`${BASE}/api/quotes`),
+        safeFetch(`${BASE}/api/shipments`),
+        safeFetch(`${BASE}/api/services`),
+        safeFetch(`${BASE}/api/contact`),
+        safeFetch(`${BASE}/api/locations`),
+        safeFetch(`${BASE}/api/goods`),
+        safeFetch(`${BASE}/api/containers`),
       ]);
 
       setCounts({
-        quotes: quotesData?.quotes?.length || 0,
-        shipments: shipmentsData?.shipments?.length || 0,
-        services: servicesData?.services?.length || 0,
-        messages: messagesData?.messages?.length || 0,
-        locations: locationsData?.locations?.length || 0,
-        goodsTypes: goodsTypesData?.types?.length || 0,
-        containerTypes: containerTypesData?.types?.length || 0,
+        quotes: (quotesData as any)?.quotes?.length || 0,
+        shipments: (shipmentsData as any)?.shipments?.length || 0,
+        services: (servicesData as any)?.services?.length || 0,
+        messages: (messagesData as any)?.messages?.length || 0,
+        locations: (locationsData as any)?.locations?.length || 0,
+        goodsTypes: (goodsTypesData as any)?.types?.length || 0,
+        containerTypes: (containerTypesData as any)?.types?.length || 0,
       });
 
-      setLatestQuotes(quotesData?.quotes?.slice(0, 5) || []);
-      setLatestShipments(shipmentsData?.shipments?.slice(0, 5) || []);
-      setLatestMessages(messagesData?.messages?.slice(0, 5) || []);
+      setLatestQuotes((quotesData as any)?.quotes?.slice(0, 5) || []);
+      setLatestShipments((shipmentsData as any)?.shipments?.slice(0, 5) || []);
+      setLatestMessages((messagesData as any)?.messages?.slice(0, 5) || []);
 
       setLoading(false);
     };
@@ -249,4 +248,3 @@ export default function AdminDashboardPage() {
     </ProtectedRoute>
   );
 }
-

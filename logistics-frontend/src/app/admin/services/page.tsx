@@ -38,10 +38,12 @@ function ServicesContent() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const data = await safeFetch('http://localhost:8000/api/services');
+        const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const data = await safeFetch(`${BASE}/api/services`);
         setServices(data.services || []);
-      } catch (error: any) {
-        toast.error('Failed to load services');
+      } catch (err: unknown) {
+        const error = err as Error;
+        toast.error(error.message || 'Failed to load services');
       } finally {
         setLoading(false);
       }
@@ -60,7 +62,8 @@ function ServicesContent() {
     setError('');
 
     try {
-      const data = await safeFetch('http://localhost:8000/api/services', {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const data = await safeFetch(`${BASE}/api/services`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -78,7 +81,8 @@ function ServicesContent() {
 
   const handleDeleteService = async (id: string) => {
     try {
-      await safeFetch(`http://localhost:8000/api/services/${id}`, {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      await safeFetch(`${BASE}/api/services/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -92,7 +96,8 @@ function ServicesContent() {
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
-      await safeFetch(`http://localhost:8000/api/services/${id}`, {
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      await safeFetch(`${BASE}/api/services/${id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
