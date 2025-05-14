@@ -37,8 +37,10 @@ export default function HowItWorks() {
 
   const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
-  // 👇 Move useInView calls out of map:
-  const inViewRefs = steps.map(() => useInView({ triggerOnce: true, threshold: 0.2 }));
+  // ✅ Call useInView hooks at top level, one per step
+  const inViewStates = steps.map(() =>
+    useInView({ triggerOnce: true, threshold: 0.2 })
+  );
 
   return (
     <section
@@ -46,7 +48,7 @@ export default function HowItWorks() {
       id="how-it-works"
       className="relative bg-white pt-24 pb-48 px-6 sm:px-12 lg:px-24"
     >
-      {/* 🔴 Scroll Progress Bar */}
+      {/* Scroll Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 h-1 bg-[#902f3c] z-[60]"
         style={{ width: progressWidth }}
@@ -64,7 +66,8 @@ export default function HowItWorks() {
 
         <div className="relative border-l-4 border-[#902f3c] pl-16 space-y-48">
           {steps.map((step, index) => {
-            const { ref, inView } = inViewRefs[index];
+            // Destructure ref and inView from the stored hooks array
+            const { ref, inView } = inViewStates[index];
             return (
               <motion.div
                 key={index}

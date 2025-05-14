@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
+type UseInViewResponse = ReturnType<typeof useInView>;
+
 const services = [
   {
     icon: '✈️',
@@ -52,8 +54,9 @@ const services = [
 ];
 
 export default function Services() {
-  // Create an array of refs/inView states outside the map
-  const inViewArray = services.map(() =>
+  // useInView cannot be called inside map, so call it here outside and get array of refs + inViews
+  // Explicit typing for the array
+  const inViewArray: UseInViewResponse[] = services.map(() =>
     useInView({ triggerOnce: true, threshold: 0.2 })
   );
 
@@ -71,7 +74,7 @@ export default function Services() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 text-left">
           {services.map((service, index) => {
-            const [ref, inView] = inViewArray[index];
+            const { ref, inView } = inViewArray[index];
             return (
               <motion.div
                 key={index}

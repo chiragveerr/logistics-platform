@@ -27,8 +27,10 @@ const points = [
 ];
 
 export default function WhyChooseUs() {
-  // Create an array of refs for all points
-  const refs = points.map(() => useInView({ triggerOnce: true, threshold: 0.2 }));
+  // Move useInView calls out of map
+  const refs = points.map(() =>
+    useInView({ triggerOnce: true, threshold: 0.2 })
+  );
 
   return (
     <section id="why-choose-us" className="bg-white py-32 px-6 sm:px-12 lg:px-24">

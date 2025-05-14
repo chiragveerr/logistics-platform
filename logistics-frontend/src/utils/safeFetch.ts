@@ -1,6 +1,12 @@
 // utils/safeFetch.ts
 import { toast } from 'react-hot-toast';
 
+interface ErrorResponse {
+  message?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
 const safeFetch = async <T = unknown>(
   url: string,
   options: RequestInit = {}
@@ -22,10 +28,11 @@ const safeFetch = async <T = unknown>(
       throw new Error(`❌ Server responded with non-JSON content: ${text.slice(0, 100)}...`);
     }
 
-    const data: T = await res.json();
+    // Cast to ErrorResponse to safely check error fields
+    const data = (await res.json()) as T & Partial<ErrorResponse>;
 
     if (!res.ok) {
-      const errorMsg = (data as any)?.message || (data as any)?.error || `❌ Request failed with status ${res.status}`;
+      const errorMsg = data.message ?? data.error ?? `❌ Request failed with status ${res.status}`;
       throw new Error(errorMsg);
     }
 
