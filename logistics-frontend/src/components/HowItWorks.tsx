@@ -37,6 +37,9 @@ export default function HowItWorks() {
 
   const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
+  // 👇 Move useInView calls out of map:
+  const inViewRefs = steps.map(() => useInView({ triggerOnce: true, threshold: 0.2 }));
+
   return (
     <section
       ref={sectionRef}
@@ -61,7 +64,7 @@ export default function HowItWorks() {
 
         <div className="relative border-l-4 border-[#902f3c] pl-16 space-y-48">
           {steps.map((step, index) => {
-            const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
+            const { ref, inView } = inViewRefs[index];
             return (
               <motion.div
                 key={index}

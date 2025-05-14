@@ -1,6 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
+// Removed unused import: motion
+
 import Link from 'next/link';
 
 export default function Footer() {

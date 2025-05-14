@@ -27,6 +27,9 @@ const points = [
 ];
 
 export default function WhyChooseUs() {
+  // Create an array of refs for all points
+  const refs = points.map(() => useInView({ triggerOnce: true, threshold: 0.2 }));
+
   return (
     <section id="why-choose-us" className="bg-white py-32 px-6 sm:px-12 lg:px-24">
       <div className="container-xl max-w-6xl mx-auto text-center">
@@ -41,7 +44,7 @@ export default function WhyChooseUs() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           {points.map((point, index) => {
-            const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
+            const { ref, inView } = refs[index];
             return (
               <motion.div
                 key={index}

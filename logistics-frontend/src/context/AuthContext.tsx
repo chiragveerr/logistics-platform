@@ -1,12 +1,20 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+
+// Define a User type (customize fields as needed)
+interface User {
+  id: string;
+  name?: string;
+  email?: string;
+  // Add other user properties here
+}
 
 interface AuthContextType {
-  user: any;
+  user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  setUser: (user: any) => void;
+  setUser: (user: User | null) => void;
   logout: () => void;
 }
 
@@ -18,8 +26,8 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -30,9 +38,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const res = await fetch(`${BASE}/api/users/profile`, {
           credentials: 'include',
         });
-        const data = await res.json();
+        const data = (await res.json()) as { user?: User };
 
-        if (res.ok) {
+        if (res.ok && data.user) {
           setUser(data.user);
         } else {
           setUser(null);

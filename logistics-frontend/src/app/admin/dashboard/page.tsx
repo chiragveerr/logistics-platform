@@ -6,6 +6,10 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
+// ==========================
+// Types
+// ==========================
+
 interface DashboardCounts {
   quotes: number;
   shipments: number;
@@ -38,6 +42,26 @@ interface Message {
   createdAt: string;
 }
 
+interface ApiQuotesResponse {
+  quotes: Quote[];
+}
+
+interface ApiShipmentsResponse {
+  shipments: Shipment[];
+}
+
+interface ApiMessagesResponse {
+  messages: Message[];
+}
+
+interface ApiGenericArrayResponse<T> {
+  [key: string]: T[];
+}
+
+// ==========================
+// Dashboard Component
+// ==========================
+
 function DashboardContent() {
   const [counts, setCounts] = useState<DashboardCounts | null>(null);
   const [latestQuotes, setLatestQuotes] = useState<Quote[]>([]);
@@ -45,32 +69,35 @@ function DashboardContent() {
   const [latestMessages, setLatestMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const safeFetch = async (url: string): Promise<unknown> => {
+  const safeFetch = async <T = unknown>(url: string): Promise<T | null> => {
     try {
       const res = await fetch(url, {
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       const contentType = res.headers.get('content-type') || '';
-      let data;
-
-      if (contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
+      if (!contentType.includes('application/json')) {
         const text = await res.text();
-        throw new Error(`❌ Server responded with non-JSON: ${text.slice(0, 100)}...`);
+        throw new Error(`❌ Non-JSON response: ${text.slice(0, 100)}...`);
       }
 
+      const data: T = await res.json();
+
       if (!res.ok) {
-        throw new Error(data.message || `❌ Failed to fetch ${url}`);
+        const errMessage =
+          (data as { message?: string })?.message ??
+          `❌ Failed to fetch ${url}`;
+        throw new Error(errMessage);
       }
 
       return data;
     } catch (err) {
       const error = err as Error;
       console.error(`🔴 Error fetching ${url}:`, error);
-      toast.error(error.message || `Failed to load ${url.split('/api/')[1] || 'data'}`);
+      toast.error(error.message || `Failed to load ${url}`);
       return null;
     }
   };
@@ -88,28 +115,28 @@ function DashboardContent() {
         goodsTypesData,
         containerTypesData,
       ] = await Promise.all([
-        safeFetch(`${BASE}/api/quotes`),
-        safeFetch(`${BASE}/api/shipments`),
-        safeFetch(`${BASE}/api/services`),
-        safeFetch(`${BASE}/api/contact`),
-        safeFetch(`${BASE}/api/locations`),
-        safeFetch(`${BASE}/api/goods`),
-        safeFetch(`${BASE}/api/containers`),
+        safeFetch<ApiQuotesResponse>(`${BASE}/api/quotes`),
+        safeFetch<ApiShipmentsResponse>(`${BASE}/api/shipments`),
+        safeFetch<ApiGenericArrayResponse<unknown>>(`${BASE}/api/services`),
+        safeFetch<ApiMessagesResponse>(`${BASE}/api/contact`),
+        safeFetch<ApiGenericArrayResponse<unknown>>(`${BASE}/api/locations`),
+        safeFetch<ApiGenericArrayResponse<unknown>>(`${BASE}/api/goods`),
+        safeFetch<ApiGenericArrayResponse<unknown>>(`${BASE}/api/containers`),
       ]);
 
       setCounts({
-        quotes: (quotesData as any)?.quotes?.length || 0,
-        shipments: (shipmentsData as any)?.shipments?.length || 0,
-        services: (servicesData as any)?.services?.length || 0,
-        messages: (messagesData as any)?.messages?.length || 0,
-        locations: (locationsData as any)?.locations?.length || 0,
-        goodsTypes: (goodsTypesData as any)?.types?.length || 0,
-        containerTypes: (containerTypesData as any)?.types?.length || 0,
+        quotes: quotesData?.quotes?.length ?? 0,
+        shipments: shipmentsData?.shipments?.length ?? 0,
+        services: servicesData?.services?.length ?? 0,
+        messages: messagesData?.messages?.length ?? 0,
+        locations: locationsData?.locations?.length ?? 0,
+        goodsTypes: goodsTypesData?.types?.length ?? 0,
+        containerTypes: containerTypesData?.types?.length ?? 0,
       });
 
-      setLatestQuotes((quotesData as any)?.quotes?.slice(0, 5) || []);
-      setLatestShipments((shipmentsData as any)?.shipments?.slice(0, 5) || []);
-      setLatestMessages((messagesData as any)?.messages?.slice(0, 5) || []);
+      setLatestQuotes(quotesData?.quotes?.slice(0, 5) ?? []);
+      setLatestShipments(shipmentsData?.shipments?.slice(0, 5) ?? []);
+      setLatestMessages(messagesData?.messages?.slice(0, 5) ?? []);
 
       setLoading(false);
     };
@@ -120,7 +147,9 @@ function DashboardContent() {
   if (loading) {
     return (
       <section className="p-10 flex justify-center items-center h-[50vh]">
-        <div className="text-xl font-semibold animate-pulse">Loading dashboard...</div>
+        <div className="text-xl font-semibold animate-pulse">
+          Loading dashboard...
+        </div>
       </section>
     );
   }
@@ -128,7 +157,9 @@ function DashboardContent() {
   if (!counts) {
     return (
       <section className="p-10 flex justify-center items-center h-[50vh]">
-        <div className="text-red-500 font-semibold">Failed to load dashboard data.</div>
+        <div className="text-red-500 font-semibold">
+          Failed to load dashboard data.
+        </div>
       </section>
     );
   }
@@ -145,101 +176,107 @@ function DashboardContent() {
 
   return (
     <section className="p-6 md:p-10">
-      <div className="mb-8">
-        <h1 className="text-4xl font-extrabold tracking-tight text-[#902f3c] dark:text-[#ffcc00]">
-          Admin Dashboard
-        </h1>
-        <p className="text-gray-500 mt-2 text-lg">Monitor all logistics operations in real-time.</p>
-      </div>
+      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {dashboardData.map((item, index) => (
           <motion.div
-            key={index}
-            whileHover={{ scale: 1.05 }}
+            key={item.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
+            className="bg-white dark:bg-gray-800 shadow rounded-lg p-6"
           >
-            <div className="rounded-2xl border border-gray-300 dark:border-gray-700 p-6 shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-[#111111]">
-              <div className="mb-3">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{item.title}</h2>
-              </div>
-              <div>
-                <p className="text-5xl font-extrabold text-[#902f3c] dark:text-[#ffcc00]">{item.value}</p>
-              </div>
-            </div>
+            <h2 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
+              {item.title}
+            </h2>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">
+              {item.value}
+            </p>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-        <div className="bg-white dark:bg-[#111111] p-6 rounded-2xl shadow-md border">
-          <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Recent Quotes</h3>
-          <div className="space-y-3 text-gray-700 dark:text-gray-300">
-            {latestQuotes.length ? (
-              latestQuotes.map((quote) => (
-                <div key={quote._id} className="flex justify-between text-sm">
-                  <span>{quote.status} • {quote.paymentTerm}</span>
-                  <span>{new Date(quote.createdAt).toLocaleDateString()}</span>
-                </div>
-              ))
-            ) : (
-              <p>No recent quotes.</p>
-            )}
-          </div>
+      <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Latest Quotes</h3>
+          <ul className="space-y-3">
+            {latestQuotes.map((quote) => (
+              <li
+                key={quote._id}
+                className="bg-white dark:bg-gray-800 p-4 rounded shadow"
+              >
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Status: <strong>{quote.status}</strong>
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Payment: {quote.paymentTerm}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Created at: {new Date(quote.createdAt).toLocaleString()}
+                </p>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="bg-white dark:bg-[#111111] p-6 rounded-2xl shadow-md border">
-          <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Recent Shipments</h3>
-          <div className="space-y-3 text-gray-700 dark:text-gray-300">
-            {latestShipments.length ? (
-              latestShipments.map((shipment) => (
-                <div key={shipment._id} className="flex justify-between text-sm">
-                  <span>{shipment.trackingNumber}</span>
-                  <span>{new Date(shipment.shipmentDate).toLocaleDateString()}</span>
-                </div>
-              ))
-            ) : (
-              <p>No recent shipments.</p>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-[#111111] p-6 rounded-2xl shadow-md border">
-          <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Recent Messages</h3>
-          <div className="space-y-3 text-gray-700 dark:text-gray-300">
-            {latestMessages.length ? (
-              latestMessages.map((msg) => (
-                <div key={msg._id} className="flex justify-between text-sm">
-                  <span>{msg.name} • {msg.subject}</span>
-                  <span>{new Date(msg.createdAt).toLocaleDateString()}</span>
-                </div>
-              ))
-            ) : (
-              <p>No recent messages.</p>
-            )}
-          </div>
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Latest Shipments</h3>
+          <ul className="space-y-3">
+            {latestShipments.map((shipment) => (
+              <li
+                key={shipment._id}
+                className="bg-white dark:bg-gray-800 p-4 rounded shadow"
+              >
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Tracking: <strong>{shipment.trackingNumber}</strong>
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Status: {shipment.status}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Shipment Date: {new Date(shipment.shipmentDate).toLocaleDateString()}
+                </p>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4">
-        <Link href="/admin/shipments/create" className="bg-[#902f3c] text-white px-5 py-3 rounded-lg hover:opacity-90 transition">
-          ➕ Create Shipment
-        </Link>
-        <Link href="/admin/quotes" className="bg-[#ffcc00] text-black px-5 py-3 rounded-lg hover:opacity-90 transition">
-          📦 Manage Quotes
-        </Link>
-        <Link href="/admin/support" className="bg-green-600 text-white px-5 py-3 rounded-lg hover:opacity-90 transition">
-          💬 View Messages
-        </Link>
-        <Link href="/admin/services" className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:opacity-90 transition">
-          🛠️ Manage Services
+      <div className="mt-10">
+        <h3 className="text-xl font-semibold mb-4">Latest Messages</h3>
+        <ul className="space-y-3">
+          {latestMessages.map((message) => (
+            <li
+              key={message._id}
+              className="bg-white dark:bg-gray-800 p-4 rounded shadow"
+            >
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                From: <strong>{message.name}</strong> | Subject: {message.subject}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Status: {message.status}
+              </p>
+              <p className="text-xs text-gray-500">
+                Received: {new Date(message.createdAt).toLocaleString()}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="mt-10 text-right">
+        <Link href="/admin/quotes">
+          <span className="text-blue-600 hover:underline">View all quotes →</span>
         </Link>
       </div>
     </section>
   );
 }
+
+// ==========================
+// Protected Page Wrapper
+// ==========================
 
 export default function AdminDashboardPage() {
   return (

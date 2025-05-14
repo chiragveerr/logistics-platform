@@ -52,6 +52,11 @@ const services = [
 ];
 
 export default function Services() {
+  // Create an array of refs/inView states outside the map
+  const inViewArray = services.map(() =>
+    useInView({ triggerOnce: true, threshold: 0.2 })
+  );
+
   return (
     <section id="services" className="bg-white py-32 px-6 sm:px-12 lg:px-24">
       <div className="container-xl max-w-6xl mx-auto text-center">
@@ -66,7 +71,7 @@ export default function Services() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 text-left">
           {services.map((service, index) => {
-            const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
+            const [ref, inView] = inViewArray[index];
             return (
               <motion.div
                 key={index}

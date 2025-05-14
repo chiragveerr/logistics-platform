@@ -1,33 +1,34 @@
 'use client';
 
 import { ReactNode, useEffect, useRef } from 'react';
+import LocomotiveScroll from 'locomotive-scroll';
 
 export default function ScrollWrapper({ children }: { children: ReactNode }) {
-  const scrollRef = useRef<any>(null);
+  // Use the correct type for LocomotiveScroll instance
+  const scrollRef = useRef<LocomotiveScroll | null>(null);
 
   useEffect(() => {
-    let scrollInstance: any;
+    if (typeof window === 'undefined') return;
 
-    if (typeof window !== 'undefined') {
-      import('locomotive-scroll').then((LocomotiveScroll) => {
-        scrollInstance = new LocomotiveScroll.default({
-          el: document.querySelector('[data-scroll-container]') as HTMLElement,
-          smooth: true,
-          multiplier: 1.2,
-          lerp: 0.1,
-        });
+    // Initialize locomotive scroll
+    const scrollInstance = new LocomotiveScroll({
+      el: document.querySelector('[data-scroll-container]') as HTMLElement,
+      smooth: true,
+      multiplier: 1.2,
+      lerp: 0.1,
+    });
 
-        scrollRef.current = scrollInstance;
+    scrollRef.current = scrollInstance;
 
-        // ✅ Wait and then update after fade-in
-        setTimeout(() => {
-          scrollInstance.update();
-        }, 1000);
-      });
-    }
+    // Update after fade-in
+    const timer = setTimeout(() => {
+      scrollInstance.update();
+    }, 1000);
 
     return () => {
-      // ✅ Very important: clean destroy
+      clearTimeout(timer);
+
+      // Clean destroy of locomotive scroll instance
       if (scrollRef.current) {
         scrollRef.current.destroy();
         scrollRef.current = null;
