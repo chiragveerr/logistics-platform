@@ -27,6 +27,12 @@ const steps = [
   },
 ];
 
+// Custom hook to call useInView count times correctly at top-level
+function useMultipleInView(count: number, options = { triggerOnce: true, threshold: 0.2 }) {
+  // call useInView exactly count times and return the array of {ref, inView}
+  return Array.from({ length: count }, () => useInView(options));
+}
+
 export default function HowItWorks() {
   const sectionRef = useRef(null);
 
@@ -37,10 +43,8 @@ export default function HowItWorks() {
 
   const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
-  // ✅ Call useInView hooks at top level, one per step
-  const inViewStates = steps.map(() =>
-    useInView({ triggerOnce: true, threshold: 0.2 })
-  );
+  // Use custom hook here (top-level call)
+  const inViewStates = useMultipleInView(steps.length);
 
   return (
     <section
