@@ -3,62 +3,42 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
-type UseInViewResponse = ReturnType<typeof useInView>;
-
 const services = [
-  {
-    icon: '✈️',
-    title: 'Air Freight',
-    description: 'Fast international cargo delivery by air.',
-  },
-  {
-    icon: '🚛',
-    title: 'Over Dimensional Cargo',
-    description: 'Special handling for large and heavy freight.',
-  },
-  {
-    icon: '📦',
-    title: 'Courier Shipment',
-    description: 'Express door-to-door delivery for parcels.',
-  },
-  {
-    icon: '🛃',
-    title: 'Customs Clearance',
-    description: 'Legal documentation for smooth import/export.',
-  },
-  {
-    icon: '🧾',
-    title: 'Buyers Console',
-    description: 'We manage consolidated shipping for buyers.',
-  },
-  {
-    icon: '🔐',
-    title: 'Cargo Insurance',
-    description: 'Protect your goods with full-value coverage.',
-  },
-  {
-    icon: '🧠',
-    title: 'Freight Nomination',
-    description: 'We execute shipments through your partner carriers.',
-  },
-  {
-    icon: '🏬',
-    title: 'Warehousing & Racking',
-    description: 'Storage, sorting, and custom racking solutions.',
-  },
-  {
-    icon: '🚀',
-    title: 'Project Cargo',
-    description: 'Heavy-lift and large-scale shipping strategy.',
-  },
+  { icon: '✈️', title: 'Air Freight', description: 'Fast international cargo delivery by air.' },
+  { icon: '🚛', title: 'Over Dimensional Cargo', description: 'Special handling for large and heavy freight.' },
+  { icon: '📦', title: 'Courier Shipment', description: 'Express door-to-door delivery for parcels.' },
+  { icon: '🛃', title: 'Customs Clearance', description: 'Legal documentation for smooth import/export.' },
+  { icon: '🧾', title: 'Buyers Console', description: 'We manage consolidated shipping for buyers.' },
+  { icon: '🔐', title: 'Cargo Insurance', description: 'Protect your goods with full-value coverage.' },
+  { icon: '🧠', title: 'Freight Nomination', description: 'We execute shipments through your partner carriers.' },
+  { icon: '🏬', title: 'Warehousing & Racking', description: 'Storage, sorting, and custom racking solutions.' },
+  { icon: '🚀', title: 'Project Cargo', description: 'Heavy-lift and large-scale shipping strategy.' },
 ];
 
 export default function Services() {
-  // useInView cannot be called inside map, so call it here outside and get array of refs + inViews
-  // Explicit typing for the array
-  const inViewArray: UseInViewResponse[] = services.map(() =>
-    useInView({ triggerOnce: true, threshold: 0.2 })
-  );
+  // ✅ Explicit useInView calls for each service, 9 calls here
+  const inView0 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView1 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView2 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView3 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView4 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView5 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView6 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView7 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView8 = useInView({ triggerOnce: true, threshold: 0.2 });
+
+  // Store refs in an array matching services order
+  const refs = [
+    inView0,
+    inView1,
+    inView2,
+    inView3,
+    inView4,
+    inView5,
+    inView6,
+    inView7,
+    inView8,
+  ];
 
   return (
     <section id="services" className="bg-white py-32 px-6 sm:px-12 lg:px-24">
@@ -74,7 +54,7 @@ export default function Services() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 text-left">
           {services.map((service, index) => {
-            const { ref, inView } = inViewArray[index];
+            const { ref, inView } = refs[index];
             return (
               <motion.div
                 key={index}

@@ -27,12 +27,6 @@ const steps = [
   },
 ];
 
-// Custom hook to call useInView count times correctly at top-level
-function useMultipleInView(count: number, options = { triggerOnce: true, threshold: 0.2 }) {
-  // call useInView exactly count times and return the array of {ref, inView}
-  return Array.from({ length: count }, () => useInView(options));
-}
-
 export default function HowItWorks() {
   const sectionRef = useRef(null);
 
@@ -43,8 +37,15 @@ export default function HowItWorks() {
 
   const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
-  // Use custom hook here (top-level call)
-  const inViewStates = useMultipleInView(steps.length);
+  // Call useInView once per step, explicitly
+  const inViewStep0 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inViewStep1 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inViewStep2 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inViewStep3 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inViewStep4 = useInView({ triggerOnce: true, threshold: 0.2 });
+
+  // Collect refs and inView states in arrays for easy mapping
+  const inViewStates = [inViewStep0, inViewStep1, inViewStep2, inViewStep3, inViewStep4];
 
   return (
     <section
@@ -70,7 +71,6 @@ export default function HowItWorks() {
 
         <div className="relative border-l-4 border-[#902f3c] pl-16 space-y-48">
           {steps.map((step, index) => {
-            // Destructure ref and inView from the stored hooks array
             const { ref, inView } = inViewStates[index];
             return (
               <motion.div

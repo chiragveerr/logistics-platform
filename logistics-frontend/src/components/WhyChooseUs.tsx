@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
+// Points data
 const points = [
   {
     icon: '🚀',
@@ -27,10 +28,14 @@ const points = [
 ];
 
 export default function WhyChooseUs() {
-  // Move useInView calls out of map
-  const refs = points.map(() =>
-    useInView({ triggerOnce: true, threshold: 0.2 })
-  );
+  // Call useInView explicitly for each point (4 points)
+  const inView0 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView1 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView2 = useInView({ triggerOnce: true, threshold: 0.2 });
+  const inView3 = useInView({ triggerOnce: true, threshold: 0.2 });
+
+  // Collect all refs & inView objects into array for mapping
+  const refs = [inView0, inView1, inView2, inView3];
 
   return (
     <section id="why-choose-us" className="bg-white py-32 px-6 sm:px-12 lg:px-24">
