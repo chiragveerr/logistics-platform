@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { motion } from 'framer-motion';
-import { toast } from 'react-hot-toast';
-import safeFetch from '@/utils/safeFetch';
+import { useEffect, useState } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { motion } from "framer-motion";
+import { toast } from "react-hot-toast";
+import safeFetch from "@/utils/safeFetch";
 
 interface Shipment {
   _id: string;
@@ -19,19 +19,19 @@ interface Shipment {
 function ShipmentsContent() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     const fetchUserShipments = async () => {
-      const data = await safeFetch(
+      const data = await safeFetch<{ shipments: Shipment[] }>(
         `${BASE}/api/shipments`,
-        { credentials: 'include' },
+        { credentials: "include" }
       );
 
       if (!data?.shipments || !Array.isArray(data.shipments)) {
-        setError('Could not fetch your shipments.');
-        toast.error('Failed to load shipments. Please login again.');
+        setError("Could not fetch your shipments.");
+        toast.error("Failed to load shipments. Please login again.");
       } else {
         setShipments(data.shipments.filter((s: Shipment) => s && s._id));
       }
@@ -53,8 +53,12 @@ function ShipmentsContent() {
   return (
     <section className="p-4 md:p-6 lg:p-10">
       <div className="mb-10 text-center">
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-[#ffcc00]">Your Shipments</h1>
-        <p className="text-gray-300 mt-2 text-base sm:text-lg">Track all your logistics in one place.</p>
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-[#ffcc00]">
+          Your Shipments
+        </h1>
+        <p className="text-gray-300 mt-2 text-base sm:text-lg">
+          Track all your logistics in one place.
+        </p>
       </div>
 
       {error && (
@@ -64,18 +68,32 @@ function ShipmentsContent() {
       )}
 
       {shipments.length === 0 ? (
-        <div className="text-white text-center text-lg italic">No shipments found.</div>
+        <div className="text-white text-center text-lg italic">
+          No shipments found.
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-gray-700 bg-[#111111]">
           <table className="min-w-[900px] w-full text-sm sm:text-base divide-y divide-gray-700">
             <thead className="bg-[#1b1b1b]">
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-white uppercase">Tracking #</th>
-                <th className="px-6 py-4 text-left font-bold text-white uppercase">Pickup</th>
-                <th className="px-6 py-4 text-left font-bold text-white uppercase">Drop-off</th>
-                <th className="px-6 py-4 text-left font-bold text-white uppercase">Est. Delivery</th>
-                <th className="px-6 py-4 text-center font-bold text-white uppercase">Status</th>
-                <th className="px-6 py-4 text-center font-bold text-white uppercase">Created</th>
+                <th className="px-6 py-4 text-left font-bold text-white uppercase">
+                  Tracking #
+                </th>
+                <th className="px-6 py-4 text-left font-bold text-white uppercase">
+                  Pickup
+                </th>
+                <th className="px-6 py-4 text-left font-bold text-white uppercase">
+                  Drop-off
+                </th>
+                <th className="px-6 py-4 text-left font-bold text-white uppercase">
+                  Est. Delivery
+                </th>
+                <th className="px-6 py-4 text-center font-bold text-white uppercase">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-center font-bold text-white uppercase">
+                  Created
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
@@ -86,24 +104,32 @@ function ShipmentsContent() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <td className="px-6 py-4 text-white font-mono">{shipment.trackingNumber}</td>
-                  <td className="px-6 py-4 text-white">{shipment.pickupLocation?.name || 'N/A'}</td>
-                  <td className="px-6 py-4 text-white">{shipment.dropOffLocation?.name || 'N/A'}</td>
+                  <td className="px-6 py-4 text-white font-mono">
+                    {shipment.trackingNumber}
+                  </td>
+                  <td className="px-6 py-4 text-white">
+                    {shipment.pickupLocation?.name || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-white">
+                    {shipment.dropOffLocation?.name || "N/A"}
+                  </td>
                   <td className="px-6 py-4 text-white">
                     {shipment.estimatedDeliveryDate
-                      ? new Date(shipment.estimatedDeliveryDate).toLocaleDateString()
-                      : '—'}
+                      ? new Date(
+                          shipment.estimatedDeliveryDate
+                        ).toLocaleDateString()
+                      : "—"}
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                        shipment.status === 'delivered'
-                          ? 'bg-green-600'
-                          : shipment.status === 'in-transit'
-                          ? 'bg-blue-600'
-                          : shipment.status === 'pending'
-                          ? 'bg-yellow-500 text-black'
-                          : 'bg-gray-600'
+                        shipment.status === "delivered"
+                          ? "bg-green-600"
+                          : shipment.status === "in-transit"
+                          ? "bg-blue-600"
+                          : shipment.status === "pending"
+                          ? "bg-yellow-500 text-black"
+                          : "bg-gray-600"
                       }`}
                     >
                       {shipment.status}

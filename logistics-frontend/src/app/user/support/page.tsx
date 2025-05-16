@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
-import safeFetch from '@/utils/safeFetch';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import safeFetch from "@/utils/safeFetch";
 
 export default function SupportPage() {
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
-  const [formData, setFormData] = useState({ phone: '', subject: '', message: '' });
+  const [user, setUser] = useState<{ name: string; email: string } | null>(
+    null
+  );
+  const [formData, setFormData] = useState({
+    phone: "",
+    subject: "",
+    message: "",
+  });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -15,13 +21,14 @@ export default function SupportPage() {
   // 🔐 Fetch user using safeFetch
   useEffect(() => {
     const fetchUser = async () => {
-      const data = await safeFetch(`${BASE}/api/users/profile`, {
-        credentials: 'include',
-      });
+      const data = await safeFetch<{ user: { name: string; email: string } }>(
+        `${BASE}/api/users/profile`,
+        { credentials: "include" }
+      );
 
       if (!data?.user) {
-        toast.error('Please login to access support');
-        router.push('/login');
+        toast.error("Please login to access support");
+        router.push("/login");
       } else {
         setUser({ name: data.user.name, email: data.user.email });
         setLoading(false);
@@ -32,7 +39,9 @@ export default function SupportPage() {
   }, [router, BASE]);
 
   // 📝 Form change handler
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -46,20 +55,20 @@ export default function SupportPage() {
       email: user?.email,
     };
 
-    const result = await safeFetch(
+    const result = await safeFetch<{ success: boolean }>(
       `${BASE}/api/contact`,
       {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       },
       { debounce: true }
     );
 
     if (result?.success) {
-      toast.success('Message sent successfully 🚀');
-      setFormData({ phone: '', subject: '', message: '' });
+      toast.success("Message sent successfully 🚀");
+      setFormData({ phone: "", subject: "", message: "" });
     }
   };
 
@@ -68,9 +77,14 @@ export default function SupportPage() {
   return (
     <div className="max-w-xl text-white">
       <h1 className="text-3xl font-semibold mb-4">Need Help? 🤝</h1>
-      <p className="text-zinc-400 mb-8">Fill out the form below and our support team will get back to you.</p>
+      <p className="text-zinc-400 mb-8">
+        Fill out the form below and our support team will get back to you.
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-zinc-800 p-6 rounded-xl shadow-lg">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-zinc-800 p-6 rounded-xl shadow-lg"
+      >
         <div>
           <label className="block text-sm mb-1">Phone Number</label>
           <input

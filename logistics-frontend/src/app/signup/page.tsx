@@ -9,6 +9,18 @@ import { motion } from 'framer-motion';
 import safeFetch from '@/utils/safeFetch';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
+export type UserType = {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  companyName?: string;
+  address?: string;
+  role: "customer" | "admin";
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export default function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -34,7 +46,7 @@ export default function SignupPage() {
     setLoading(true);
 
     // Debounce signup to prevent double submit
-    const res = await safeFetch(
+    const res = await safeFetch<{user: UserType}>(
       `${BASE}/api/users/register`,
       {
         method: 'POST',

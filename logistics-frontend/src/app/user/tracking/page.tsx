@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { motion } from 'framer-motion';
-import safeFetch from '@/utils/safeFetch';
+import { useEffect, useState } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { motion } from "framer-motion";
+import safeFetch from "@/utils/safeFetch";
 
 interface Shipment {
   _id: string;
@@ -20,20 +20,23 @@ interface TrackingEvent {
 }
 
 function TrackingContent() {
-  const [shipmentId, setShipmentId] = useState('');
+  const [shipmentId, setShipmentId] = useState("");
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [events, setEvents] = useState<TrackingEvent[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // 🛩️ Fetch user shipments (throttled)
   useEffect(() => {
     const fetchUserShipments = async () => {
-      const data = await safeFetch(`${BASE}/api/shipments`, {
-        credentials: 'include',
-      });
+      const data = await safeFetch<{ shipments: Shipment[] }>(
+        `${BASE}/api/shipments`,
+        {
+          credentials: "include",
+        }
+      );
 
       if (data?.shipments) {
         setShipments(data.shipments);
@@ -46,21 +49,25 @@ function TrackingContent() {
   // 🛰️ Fetch tracking events (throttled)
   const fetchEvents = async () => {
     if (!shipmentId.trim()) {
-      setError('⚠️ Please select a shipment');
+      setError("⚠️ Please select a shipment");
       return;
     }
 
-    setError('');
+    setError("");
     setLoading(true);
 
-    const data = await safeFetch(`${BASE}/api/tracking/${shipmentId}`, {
-      credentials: 'include',
-    }, { throttle: true });
+    const data = await safeFetch<{ events: TrackingEvent[] }>(
+      `${BASE}/api/tracking/${shipmentId}`,
+      {
+        credentials: "include",
+      },
+      { throttle: true }
+    );
 
     if (data?.events) {
       setEvents(data.events);
     } else {
-      setError('Could not fetch events. Try again.');
+      setError("Could not fetch events. Try again.");
       setEvents([]);
     }
 
@@ -70,8 +77,12 @@ function TrackingContent() {
   return (
     <section className="p-4 md:p-6 lg:p-10">
       <div className="mb-10 text-center">
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-[#ffcc00]">Track Your Shipment</h1>
-        <p className="text-gray-300 mt-2 text-base sm:text-lg">Select a shipment to view tracking history.</p>
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-[#ffcc00]">
+          Track Your Shipment
+        </h1>
+        <p className="text-gray-300 mt-2 text-base sm:text-lg">
+          Select a shipment to view tracking history.
+        </p>
       </div>
 
       <div className="bg-[#111111] p-6 rounded-2xl shadow-xl border border-gray-700 mb-10">
@@ -106,19 +117,33 @@ function TrackingContent() {
 
       {/* 📦 Tracking Events Table */}
       {loading ? (
-        <div className="text-white text-center animate-pulse">Loading tracking events...</div>
+        <div className="text-white text-center animate-pulse">
+          Loading tracking events...
+        </div>
       ) : events.length === 0 && shipmentId ? (
-        <div className="text-white text-center text-lg italic">No tracking events found.</div>
+        <div className="text-white text-center text-lg italic">
+          No tracking events found.
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-gray-700 bg-[#111111]">
           <table className="min-w-[1000px] w-full divide-y divide-gray-700">
             <thead className="bg-[#1b1b1b]">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">Event</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">Location</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">Time</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">Remarks</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">
+                  Event
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">
+                  Location
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">
+                  Time
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">
+                  Remarks
+                </th>
               </tr>
             </thead>
             <tbody className="bg-[#111111] divide-y divide-gray-700">
@@ -129,11 +154,17 @@ function TrackingContent() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <td className="px-6 py-4 text-white">{event.event || '—'}</td>
+                  <td className="px-6 py-4 text-white">{event.event || "—"}</td>
                   <td className="px-6 py-4 text-white">{event.location}</td>
-                  <td className="px-6 py-4 text-white capitalize">{event.status}</td>
-                  <td className="px-6 py-4 text-white">{new Date(event.eventTime).toLocaleString()}</td>
-                  <td className="px-6 py-4 text-white">{event.remarks || '—'}</td>
+                  <td className="px-6 py-4 text-white capitalize">
+                    {event.status}
+                  </td>
+                  <td className="px-6 py-4 text-white">
+                    {new Date(event.eventTime).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 text-white">
+                    {event.remarks || "—"}
+                  </td>
                 </motion.tr>
               ))}
             </tbody>

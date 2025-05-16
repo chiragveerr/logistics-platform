@@ -24,7 +24,7 @@ export default function ContactPage() {
 
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const res = await safeFetch(
+      const res = await safeFetch<{ success: boolean; message?: string }>(
         `${BASE}/api/contact`,
         {
           method: 'POST',

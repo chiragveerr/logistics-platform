@@ -68,11 +68,11 @@ function ShipmentsContent() {
 
         // Throttle all fetches to prevent spamming
         const [shipmentsData, locationsData, quotesData, goodsData, containersData] = await Promise.all([
-          safeFetch(`${BASE}/api/shipments`,),
-          safeFetch(`${BASE}/api/locations?showAll=true`,),
-          safeFetch(`${BASE}/api/quotes`,),
-          safeFetch(`${BASE}/api/goods?showAll=true`,),
-          safeFetch(`${BASE}/api/containers?showAll=true`,),
+          safeFetch<{ shipments: Shipment[] }>(`${BASE}/api/shipments`,),
+          safeFetch<{ locations: Location[] }>(`${BASE}/api/locations?showAll=true`,),
+          safeFetch<{ quotes: Quote[] }>(`${BASE}/api/quotes`,),
+          safeFetch<{ types: GoodsType[] }>(`${BASE}/api/goods?showAll=true`,),
+          safeFetch<{ types: ContainerType[] }>(`${BASE}/api/containers?showAll=true`,),
         ]);
 
         setShipments(shipmentsData?.shipments || []);
@@ -106,7 +106,7 @@ function ShipmentsContent() {
 
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const data = await safeFetch(`${BASE}/api/shipments`, {
+      const data = await safeFetch<{ shipment: Shipment }>(`${BASE}/api/shipments`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

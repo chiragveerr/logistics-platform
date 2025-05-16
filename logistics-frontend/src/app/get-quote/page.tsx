@@ -43,33 +43,33 @@ export default function CreateQuotePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchActiveData = async () => {
-      const locData = await safeFetch(`${BASE}/api/locations`);
-      const goodsData = await safeFetch(`${BASE}/api/goods`);
-      const containerData = await safeFetch(`${BASE}/api/containers`);
+  const fetchActiveData = async () => {
+    const locData = await safeFetch<{ locations: LocationType[] }>(`${BASE}/api/locations`);
+    const goodsData = await safeFetch<{ types: GoodsType[] }>(`${BASE}/api/goods`);
+    const containerData = await safeFetch<{ types: ContainerType[] }>(`${BASE}/api/containers`);
 
-      if (locData?.locations) {
-        const pickup = locData.locations.filter(
-          (loc: LocationType) => loc.status === 'active' && loc.type === 'pickup'
-        );
-        const drop = locData.locations.filter(
-          (loc: LocationType) => loc.status === 'active' && loc.type === 'drop-off'
-        );
-        setPickupLocations(pickup);
-        setDropLocations(drop);
-      }
-      if (goodsData?.types) {
-        const activeGoods = goodsData.types.filter((g: GoodsType) => g.status === 'active');
-        setGoodsTypes(activeGoods);
-      }
-      if (containerData?.types) {
-        const activeContainers = containerData.types.filter((c: ContainerType) => c.status === 'active');
-        setContainerTypes(activeContainers);
-      }
-    };
+    if (locData?.locations) {
+      const pickup = locData.locations.filter(
+        (loc: LocationType) => loc.status === 'active' && loc.type === 'pickup'
+      );
+      const drop = locData.locations.filter(
+        (loc: LocationType) => loc.status === 'active' && loc.type === 'drop-off'
+      );
+      setPickupLocations(pickup);
+      setDropLocations(drop);
+    }
+    if (goodsData?.types) {
+      const activeGoods = goodsData.types.filter((g: GoodsType) => g.status === 'active');
+      setGoodsTypes(activeGoods);
+    }
+    if (containerData?.types) {
+      const activeContainers = containerData.types.filter((c: ContainerType) => c.status === 'active');
+      setContainerTypes(activeContainers);
+    }
+  };
 
-    fetchActiveData();
-  }, [BASE]);
+  fetchActiveData();
+}, [BASE]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +98,7 @@ export default function CreateQuotePage() {
       },
     };
 
-    const res = await safeFetch(`${BASE}/api/quotes`, {
+    const res = await safeFetch<{ quote: unknown }>(`${BASE}/api/quotes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

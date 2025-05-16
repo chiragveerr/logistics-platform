@@ -28,7 +28,7 @@ function ProfileContent() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const data = await safeFetch(
+      const data = await safeFetch<{ user: UserProfile }>(
         `${BASE}/api/users/profile`,
         { credentials: 'include' },
       );
@@ -50,7 +50,7 @@ function ProfileContent() {
   const handleUpdate = async () => {
     setSaving(true);
 
-    const data = await safeFetch(
+    const data = await safeFetch<{ user: UserProfile }>(
       `${BASE}/api/users/profile`,
       {
         method: 'PUT',

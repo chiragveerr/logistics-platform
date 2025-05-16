@@ -46,7 +46,7 @@ export default function AdminGoodsPage() {
   const fetchGoods = useCallback(async () => {
     setLoading(true);
     const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const data = await safeFetch(`${BASE}/api/goods`);
+    const data = await safeFetch<{types: GoodsType[]}>(`${BASE}/api/goods`);
     if (!data) return;
 
     const all = data.types || [];
@@ -69,7 +69,7 @@ export default function AdminGoodsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const res = await safeFetch(`${BASE}/api/goods`, {
+    const res = await safeFetch<{ goodsType: GoodsType}>(`${BASE}/api/goods`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

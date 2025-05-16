@@ -48,8 +48,8 @@ export default function AdminTrackingPage() {
   const fetchShipments = async () => {
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const data = await safeFetch(`${BASE}/api/shipments`);
-      setShipments(data.shipments || []);
+      const data = await safeFetch<{ shipments: Shipment[] }>(`${BASE}/api/shipments`);
+      setShipments(data?.shipments || []);
     } catch {
       toast.error('Failed to fetch shipments');
     }
@@ -61,8 +61,8 @@ export default function AdminTrackingPage() {
     setLoading(true);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const data = await safeFetch(`${BASE}/api/tracking/${shipmentId}`, undefined, { throttle: true });
-      setEvents(data.events || []);
+      const data = await safeFetch<{ events: TrackingEvent[] }>(`${BASE}/api/tracking/${shipmentId}`, undefined, { throttle: true });
+      setEvents(data?.events || []);
     } catch {
       toast.error('Failed to fetch tracking events');
     } finally {
@@ -79,7 +79,7 @@ export default function AdminTrackingPage() {
 
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const data = await safeFetch(`${BASE}/api/tracking`, {
+      const data = await safeFetch<{ trackingEvent: TrackingEvent }>(`${BASE}/api/tracking`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

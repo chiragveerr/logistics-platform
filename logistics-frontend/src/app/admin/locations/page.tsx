@@ -48,7 +48,7 @@ export default function AdminLocationsPage(): JSX.Element {
 
   // Throttle fetchLocations to prevent spamming on filter change
   const fetchLocations = useCallback(async () => {
-    const res = await safeFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`);
+    const res = await safeFetch<{locations: Location[]}>(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`);
     if (!res?.locations) return;
 
     const all = res.locations as Location[];
@@ -90,7 +90,7 @@ export default function AdminLocationsPage(): JSX.Element {
       parseFloat(coordinates[1]),
     ];
 
-    const res = await safeFetch(
+    const res = await safeFetch<{location: Location}>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`,
       {
         method: 'POST',
@@ -118,7 +118,7 @@ export default function AdminLocationsPage(): JSX.Element {
 
   // Throttle delete to prevent rapid delete clicks
   const handleDeleteLocation = async (id: string): Promise<void> => {
-    const res = await safeFetch(
+    const res = await safeFetch<{success: boolean}>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`,
       {
         method: 'DELETE',
@@ -135,7 +135,7 @@ export default function AdminLocationsPage(): JSX.Element {
 
   // Throttle status update to prevent rapid toggling
   const handleUpdateStatus = async (id: string, newStatus: 'active' | 'inactive'): Promise<void> => {
-    const res = await safeFetch(
+    const res = await safeFetch<{success: boolean}>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`,
       {
         method: 'PUT',
