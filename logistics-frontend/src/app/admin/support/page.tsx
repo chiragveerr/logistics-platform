@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import safeFetch from '@/utils/safeFetch';
 
 interface Message {
   _id: string;
@@ -20,17 +21,16 @@ function SupportMessagesContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Throttle fetchMessages to prevent spamming
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const res = await fetch(`${BASE}/api/contact`, {
-          credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch messages');
-        const data = await res.json();
-        setMessages(data.messages || []);
+        const data = await safeFetch<{ messages: Message[] }>(
+          `${BASE}/api/contact`,
+          
+        );
+        setMessages(data?.messages || []);
       } catch (err: unknown) {
         const error = err as Error;
         console.error('Error fetching messages:', error.message);
@@ -44,15 +44,18 @@ function SupportMessagesContent() {
     fetchMessages();
   }, []);
 
+  // Throttle delete to prevent rapid delete clicks
   const handleDeleteMessage = async (id: string) => {
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const res = await fetch(`${BASE}/api/contact/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (!res.ok) throw new Error('Failed to delete message');
+      await safeFetch(
+        `${BASE}/api/contact/${id}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        },
+        { throttle: true }
+      );
 
       setMessages((prev) => prev.filter((msg) => msg._id !== id));
       toast.success('Message deleted');
@@ -63,17 +66,20 @@ function SupportMessagesContent() {
     }
   };
 
+  // Debounce status update to prevent rapid toggling
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const res = await fetch(`${BASE}/api/contact/${id}/status`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!res.ok) throw new Error('Failed to update message status');
+      await safeFetch(
+        `${BASE}/api/contact/${id}/status`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        },
+        { debounce: true }
+      );
 
       setMessages((prev) =>
         prev.map((msg) =>
@@ -163,7 +169,7 @@ function SupportMessagesContent() {
                     >
                       🗑️ Delete
                     </button>
-                  </td> 
+                  </td>
                 </motion.tr>
               ))}
             </tbody>

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
+import safeFetch from '@/utils/safeFetch';
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -17,24 +18,27 @@ export default function ContactPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Debounce submit to prevent double submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const res = await fetch(`${BASE}/api/contact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+      const res = await safeFetch(
+        `${BASE}/api/contact`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        },
+        { debounce: true }
+      );
 
-      const data = await res.json();
-
-      if (res.ok) {
+      if (res?.success) {
         toast.success('✅ Message sent successfully!');
         setForm({ name: '', email: '', phone: '', subject: '', message: '' });
       } else {
-        toast.error('❌ Failed to send message: ' + data.message);
+        toast.error('❌ Failed to send message: ' + (res?.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Submit Error:', error);

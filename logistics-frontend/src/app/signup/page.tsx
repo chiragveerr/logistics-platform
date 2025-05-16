@@ -33,10 +33,15 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const res = await safeFetch(`${BASE}/api/users/register`, {
-      method: 'POST',
-      body: JSON.stringify(form),
-    });
+    // Debounce signup to prevent double submit
+    const res = await safeFetch(
+      `${BASE}/api/users/register`,
+      {
+        method: 'POST',
+        body: JSON.stringify(form),
+      },
+      { debounce: true }
+    );
 
     if (res && res.user) {
       toast.success('Signup successful!');

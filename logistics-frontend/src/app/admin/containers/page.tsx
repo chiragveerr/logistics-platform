@@ -5,18 +5,20 @@ import { toast } from "react-hot-toast";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import safeFetch from "@/utils/safeFetch";
 
+interface ContainerDimensions {
+  insideLength: number;
+  insideWidth: number;
+  insideHeight: number;
+  doorWidth: number;
+  doorHeight: number;
+  cbmCapacity: number;
+}
+
 interface ContainerType {
   _id: string;
   name: string;
   description: string;
-  dimensions: {
-    insideLength: number;
-    insideWidth: number;
-    insideHeight: number;
-    doorWidth: number;
-    doorHeight: number;
-    cbmCapacity: number;
-  };
+  dimensions: ContainerDimensions;
   tareWeight: number;
   maxCargoWeight: number;
   status: string;
@@ -186,17 +188,22 @@ export default function AdminContainersPage() {
   const [isCustom, setIsCustom] = useState(false);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
 
+  // Only throttle for fetching containers (prevents spamming on filter change)
   const fetchContainers = useCallback(async () => {
     const query = filter === "all" ? "?showAll=true" : "";
-    const data = await safeFetch(`http://localhost:8000/api/containers${query}`);
+    const data = await safeFetch<{ types: ContainerType[] }>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/containers${query}`,
+
+    );
+
     if (!data) return;
 
-    const all = data.types || [];
-    const filtered =
+    const all: ContainerType[] = data.types || [];
+    const filtered: ContainerType[] =
       filter === "active"
-        ? all.filter((c: ContainerType) => c.status === "active")
+        ? all.filter((c) => c.status === "active")
         : filter === "inactive"
-        ? all.filter((c: ContainerType) => c.status === "inactive")
+        ? all.filter((c) => c.status === "inactive")
         : all;
 
     setContainers(filtered);
@@ -213,6 +220,7 @@ export default function AdminContainersPage() {
     }
   }, [newContainer.name, isCustom]);
 
+  // Debounce create (prevents double submit)
   const handleCreate = async () => {
     const { name, description, dimensions, tareWeight, maxCargoWeight } = newContainer;
 
@@ -227,12 +235,16 @@ export default function AdminContainersPage() {
       return;
     }
 
-    const data = await safeFetch("http://localhost:8000/api/containers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(newContainer),
-    });
+    const data = await safeFetch<{ container: ContainerType }>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/containers`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(newContainer),
+      },
+      { debounce: true }
+    );
 
     if (data?.container) {
       toast.success("Container created");
@@ -255,13 +267,18 @@ export default function AdminContainersPage() {
     }
   };
 
+  // Throttle delete (prevents rapid delete clicks)
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this container?")) return;
 
-    const res = await safeFetch(`http://localhost:8000/api/containers/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    const res = await safeFetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/containers/${id}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      },
+      { throttle: true }
+    );
 
     if (res) {
       toast.success("Container deleted");
@@ -269,13 +286,18 @@ export default function AdminContainersPage() {
     }
   };
 
+  // Throttle status toggle (prevents rapid toggling)
   const toggleStatus = async (id: string, status: string) => {
-    const res = await safeFetch(`http://localhost:8000/api/containers/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ status }),
-    });
+    const res = await safeFetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/containers/${id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      },
+      { throttle: true }
+    );
 
     if (res) {
       toast.success("Status updated");
@@ -316,118 +338,202 @@ export default function AdminContainersPage() {
                 type="checkbox"
                 id="customToggle"
                 checked={isCustom}
-                onChange={(e) => setIsCustom(e.target.checked)}
+                onChange={() => {
+                  setIsCustom((prev) => !prev);
+                  setNewContainer({
+                    name: "",
+                    description: "",
+                    dimensions: {
+                      insideLength: 0,
+                      insideWidth: 0,
+                      insideHeight: 0,
+                      doorWidth: 0,
+                      doorHeight: 0,
+                      cbmCapacity: 0,
+                    },
+                    tareWeight: 0,
+                    maxCargoWeight: 0,
+                  });
+                }}
+                className="cursor-pointer"
               />
-              <label htmlFor="customToggle" className="text-sm font-medium text-white">
-                Enter Custom Container
+              <label htmlFor="customToggle" className="cursor-pointer select-none">
+                Create Custom Container
               </label>
             </div>
 
-            {!isCustom && (
+            {!isCustom ? (
               <select
-                className="p-3 w-full rounded-md bg-[#1b1b1b] text-white border border-gray-700"
+                className="w-full bg-[#222] rounded-md p-2"
                 value={newContainer.name}
                 onChange={(e) =>
-                  setNewContainer((prev) => ({ ...prev, name: e.target.value }))
+                  setNewContainer((prev) => ({
+                    ...prev,
+                    name: e.target.value,
+                  }))
                 }
               >
-                <option value="">Select Standard Container</option>
-                {STANDARD_CONTAINERS.map((c) => (
-                  <option key={c.name} value={c.name}>
-                    {c.name}
+                <option value="">-- Select Standard Container --</option>
+                {STANDARD_CONTAINERS.map((cont) => (
+                  <option key={cont.name} value={cont.name}>
+                    {cont.name}
                   </option>
                 ))}
               </select>
-            )}
-
-            <input
-              type="text"
-              placeholder="Custom Container Name"
-              value={newContainer.name}
-              onChange={(e) =>
-                setNewContainer((prev) => ({ ...prev, name: e.target.value }))
-              }
-              className="p-3 rounded-md w-full bg-[#1b1b1b] text-white border border-gray-700"
-            />
-
-            <input
-              type="text"
-              placeholder="Container Description"
-              value={newContainer.description}
-              onChange={(e) =>
-                setNewContainer({
-                  ...newContainer,
-                  description: e.target.value,
-                })
-              }
-              className="p-3 rounded-md w-full bg-[#1b1b1b] text-white border border-gray-700"
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { key: "insideLength", label: "Inside Length (m)" },
-                { key: "insideWidth", label: "Inside Width (m)" },
-                { key: "insideHeight", label: "Inside Height (m)" },
-                { key: "doorWidth", label: "Door Width (m)" },
-                { key: "doorHeight", label: "Door Height (m)" },
-                { key: "cbmCapacity", label: "CBM Capacity" },
-              ].map(({ key, label }) => (
+            ) : (
+              <>
                 <input
-                  key={key}
-                  type="number"
-                  step="any"
-                  placeholder={label}
-                  value={
-                    newContainer.dimensions[
-                      key as keyof typeof newContainer.dimensions
-                    ] || ""
+                  type="text"
+                  placeholder="Name"
+                  className="w-full p-2 rounded-md bg-[#222] text-white"
+                  value={newContainer.name}
+                  onChange={(e) =>
+                    setNewContainer((prev) => ({ ...prev, name: e.target.value }))
                   }
+                />
+                <textarea
+                  placeholder="Description"
+                  className="w-full p-2 rounded-md bg-[#222] text-white"
+                  rows={2}
+                  value={newContainer.description}
+                  onChange={(e) =>
+                    setNewContainer((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="number"
+                    step="0.001"
+                    placeholder="Inside Length (m)"
+                    className="p-2 rounded-md bg-[#222] text-white"
+                    value={newContainer.dimensions.insideLength}
+                    onChange={(e) =>
+                      setNewContainer((prev) => ({
+                        ...prev,
+                        dimensions: {
+                          ...prev.dimensions,
+                          insideLength: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    step="0.001"
+                    placeholder="Inside Width (m)"
+                    className="p-2 rounded-md bg-[#222] text-white"
+                    value={newContainer.dimensions.insideWidth}
+                    onChange={(e) =>
+                      setNewContainer((prev) => ({
+                        ...prev,
+                        dimensions: {
+                          ...prev.dimensions,
+                          insideWidth: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    step="0.001"
+                    placeholder="Inside Height (m)"
+                    className="p-2 rounded-md bg-[#222] text-white"
+                    value={newContainer.dimensions.insideHeight}
+                    onChange={(e) =>
+                      setNewContainer((prev) => ({
+                        ...prev,
+                        dimensions: {
+                          ...prev.dimensions,
+                          insideHeight: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    step="0.001"
+                    placeholder="Door Width (m)"
+                    className="p-2 rounded-md bg-[#222] text-white"
+                    value={newContainer.dimensions.doorWidth}
+                    onChange={(e) =>
+                      setNewContainer((prev) => ({
+                        ...prev,
+                        dimensions: {
+                          ...prev.dimensions,
+                          doorWidth: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    step="0.001"
+                    placeholder="Door Height (m)"
+                    className="p-2 rounded-md bg-[#222] text-white"
+                    value={newContainer.dimensions.doorHeight}
+                    onChange={(e) =>
+                      setNewContainer((prev) => ({
+                        ...prev,
+                        dimensions: {
+                          ...prev.dimensions,
+                          doorHeight: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    step="0.001"
+                    placeholder="CBM Capacity"
+                    className="p-2 rounded-md bg-[#222] text-white"
+                    value={newContainer.dimensions.cbmCapacity}
+                    onChange={(e) =>
+                      setNewContainer((prev) => ({
+                        ...prev,
+                        dimensions: {
+                          ...prev.dimensions,
+                          cbmCapacity: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
+                  />
+                </div>
+
+                <input
+                  type="number"
+                  step="1"
+                  placeholder="Tare Weight (kg)"
+                  className="w-full p-2 rounded-md bg-[#222] text-white"
+                  value={newContainer.tareWeight}
                   onChange={(e) =>
                     setNewContainer((prev) => ({
                       ...prev,
-                      dimensions: {
-                        ...prev.dimensions,
-                        [key]: parseFloat(e.target.value),
-                      },
+                      tareWeight: parseInt(e.target.value) || 0,
                     }))
                   }
-                  className="p-3 rounded-md bg-[#1b1b1b] text-white border border-gray-700"
                 />
-              ))}
-
-              <input
-                type="number"
-                step="any"
-                placeholder="Tare Weight (kg)"
-                value={newContainer.tareWeight || ""}
-                onChange={(e) =>
-                  setNewContainer((prev) => ({
-                    ...prev,
-                    tareWeight: parseFloat(e.target.value),
-                  }))
-                }
-                className="p-3 rounded-md bg-[#1b1b1b] text-white border border-gray-700"
-              />
-              <input
-                type="number"
-                step="any"
-                placeholder="Max Cargo Weight (kg)"
-                value={newContainer.maxCargoWeight || ""}
-                onChange={(e) =>
-                  setNewContainer((prev) => ({
-                    ...prev,
-                    maxCargoWeight: parseFloat(e.target.value),
-                  }))
-                }
-                className="p-3 rounded-md bg-[#1b1b1b] text-white border border-gray-700"
-              />
-            </div>
+                <input
+                  type="number"
+                  step="1"
+                  placeholder="Max Cargo Weight (kg)"
+                  className="w-full p-2 rounded-md bg-[#222] text-white"
+                  value={newContainer.maxCargoWeight}
+                  onChange={(e) =>
+                    setNewContainer((prev) => ({
+                      ...prev,
+                      maxCargoWeight: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                />
+              </>
+            )}
 
             <button
+              className="bg-[#b92935] hover:bg-[#a1242f] text-white px-4 py-2 rounded-md"
               onClick={handleCreate}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg w-full sm:w-auto"
             >
-              Submit
+              Create Container
             </button>
           </div>
         )}
@@ -436,18 +542,31 @@ export default function AdminContainersPage() {
           {containers.map((container) => (
             <div
               key={container._id}
-              className="bg-[#1b1b1b] p-5 rounded-xl border border-gray-700 text-white space-y-2"
+              className="bg-[#111] p-5 rounded-xl border border-gray-700 flex flex-col justify-between"
             >
-              <h2 className="text-xl font-bold">{container.name}</h2>
-              <p className="text-sm text-gray-400">{container.description}</p>
-              <p className="text-xs text-gray-500">
-                CBM: {container.dimensions?.cbmCapacity}
-              </p>
-              <p className="text-xs text-gray-500">
-                Max Load: {container.maxCargoWeight} kg
-              </p>
+              <div>
+                <h2 className="text-xl font-semibold text-[#ffcc00]">{container.name}</h2>
+                <p className="text-gray-300 my-2">{container.description}</p>
 
-              <div className="flex gap-3 mt-3">
+                <ul className="text-gray-400 text-sm space-y-1">
+                  <li>
+                    Dimensions (L×W×H):{" "}
+                    {`${container.dimensions.insideLength}m × ${container.dimensions.insideWidth}m × ${container.dimensions.insideHeight}m`}
+                  </li>
+                  <li>
+                    Door (W×H):{" "}
+                    {container.dimensions.doorWidth && container.dimensions.doorHeight
+                      ? `${container.dimensions.doorWidth}m × ${container.dimensions.doorHeight}m`
+                      : "N/A"}
+                  </li>
+                  <li>CBM Capacity: {container.dimensions.cbmCapacity} m³</li>
+                  <li>Tare Weight: {container.tareWeight} kg</li>
+                  <li>Max Cargo Weight: {container.maxCargoWeight} kg</li>
+                  <li>Status: {container.status}</li>
+                </ul>
+              </div>
+
+              <div className="flex justify-between mt-4 gap-2">
                 <button
                   onClick={() =>
                     toggleStatus(
@@ -455,23 +574,28 @@ export default function AdminContainersPage() {
                       container.status === "active" ? "inactive" : "active"
                     )
                   }
-                  className={`text-xs px-3 py-1 rounded-full ${
-                    container.status === "active"
-                      ? "bg-green-600"
-                      : "bg-yellow-600"
+                  className={`px-3 py-1 rounded-md text-white ${
+                    container.status === "active" ? "bg-red-600" : "bg-green-600"
                   }`}
                 >
-                  {container.status}
+                  {container.status === "active" ? "Deactivate" : "Activate"}
                 </button>
+
                 <button
                   onClick={() => handleDelete(container._id)}
-                  className="bg-red-600 hover:bg-red-700 text-xs px-3 py-1 rounded-full"
+                  className="px-3 py-1 rounded-md bg-[#b92935] hover:bg-[#8e2127] text-white"
                 >
                   Delete
                 </button>
               </div>
             </div>
           ))}
+
+          {containers.length === 0 && (
+            <p className="text-gray-400 col-span-full text-center mt-10">
+              No containers found.
+            </p>
+          )}
         </div>
       </div>
     </ProtectedRoute>

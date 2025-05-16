@@ -36,7 +36,7 @@ export default function SupportPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 📬 Submit support message
+  // 📬 Submit support message (debounced)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -46,12 +46,16 @@ export default function SupportPage() {
       email: user?.email,
     };
 
-    const result = await safeFetch(`${BASE}/api/contact`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    const result = await safeFetch(
+      `${BASE}/api/contact`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      },
+      { debounce: true }
+    );
 
     if (result?.success) {
       toast.success('Message sent successfully 🚀');

@@ -24,9 +24,10 @@ function ShipmentsContent() {
 
   useEffect(() => {
     const fetchUserShipments = async () => {
-      const data = await safeFetch(`${BASE}/api/shipments`, {
-        credentials: 'include',
-      });
+      const data = await safeFetch(
+        `${BASE}/api/shipments`,
+        { credentials: 'include' },
+      );
 
       if (!data?.shipments || !Array.isArray(data.shipments)) {
         setError('Could not fetch your shipments.');

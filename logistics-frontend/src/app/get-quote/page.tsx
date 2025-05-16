@@ -103,7 +103,7 @@ export default function CreateQuotePage() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(payload),
-    });
+    }, {debounce: true});
 
     if (res?.quote) {
       toast.success('✅ Quote submitted successfully!');

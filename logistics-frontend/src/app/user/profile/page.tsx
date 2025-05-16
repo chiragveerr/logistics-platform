@@ -28,9 +28,10 @@ function ProfileContent() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const data = await safeFetch(`${BASE}/api/users/profile`, {
-        credentials: 'include',
-      });
+      const data = await safeFetch(
+        `${BASE}/api/users/profile`,
+        { credentials: 'include' },
+      );
 
       if (!data?.user) {
         toast.error('Failed to load profile');
@@ -45,15 +46,20 @@ function ProfileContent() {
     fetchProfile();
   }, [BASE]);
 
+  // Debounce update to prevent double submit
   const handleUpdate = async () => {
     setSaving(true);
 
-    const data = await safeFetch(`${BASE}/api/users/profile`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(profile),
-    });
+    const data = await safeFetch(
+      `${BASE}/api/users/profile`,
+      {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+      },
+      { debounce: true }
+    );
 
     if (data?.user) {
       toast.success('Profile updated successfully');

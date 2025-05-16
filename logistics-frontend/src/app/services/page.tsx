@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import safeFetch from '@/utils/safeFetch';
 
 interface ServiceType {
   _id: string;
@@ -48,13 +49,15 @@ export default function ServicesPage() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await fetch(`${BASE}/api/services`, { cache: 'no-store', credentials: "include" });
-        const data = await res.json();
-        if (Array.isArray(data.services)) {
+        // Use safeFetch with throttle to prevent spamming
+        const data = await safeFetch<{ services: ServiceType[] }>(
+          `${BASE}/api/services`
+        );
+        if (Array.isArray(data?.services)) {
           const active = data.services.filter((s: ServiceType) => s.status === 'active');
           setActiveServices(active);
         } else {
-          toast.error('Their is no active services');
+          toast.error('There is no active services');
         }
       } catch (err) {
         console.error('Error fetching services:', err);

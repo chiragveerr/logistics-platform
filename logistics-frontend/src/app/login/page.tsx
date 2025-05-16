@@ -31,12 +31,16 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const data = await safeFetch(`${BASE}/api/users/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(form),
-    });
+    const data = await safeFetch(
+      `${BASE}/api/users/login`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(form),
+      },
+      { debounce: true } // <-- Debounce added here
+    );
 
     setLoading(false);
     if (!data?.user) return;

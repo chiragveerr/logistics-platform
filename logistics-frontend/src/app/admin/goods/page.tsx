@@ -42,6 +42,7 @@ export default function AdminGoodsPage() {
   const [description, setDescription] = useState('');
   const [filter, setFilter] = useState<FilterStatus>('all');
 
+  // Throttle fetchGoods to prevent spamming on filter change
   const fetchGoods = useCallback(async () => {
     setLoading(true);
     const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -64,6 +65,7 @@ export default function AdminGoodsPage() {
     fetchGoods();
   }, [fetchGoods]);
 
+  // Debounce create to prevent double submit
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -72,7 +74,7 @@ export default function AdminGoodsPage() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ name, description }),
-    });
+    }, { debounce: true });
 
     if (res?.goodsType) {
       toast.success('✅ Goods type created!');
@@ -82,6 +84,7 @@ export default function AdminGoodsPage() {
     }
   };
 
+  // Debounce edit to prevent double submit
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentGoods) return;
@@ -92,7 +95,7 @@ export default function AdminGoodsPage() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ name, description }),
-    });
+    }, { debounce: true });
 
     if (res) {
       toast.success('✅ Goods type updated!');
@@ -106,6 +109,7 @@ export default function AdminGoodsPage() {
     }
   };
 
+  // Throttle status toggle to prevent rapid toggling
   const toggleStatus = async (id: string, status: string) => {
     const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     const res = await safeFetch(`${BASE}/api/goods/${id}`, {
@@ -113,7 +117,7 @@ export default function AdminGoodsPage() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ status }),
-    });
+    }, { throttle: true });
 
     if (res) {
       toast.success('Status updated');
@@ -121,6 +125,7 @@ export default function AdminGoodsPage() {
     }
   };
 
+  // Throttle delete to prevent rapid delete clicks
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this goods type?')) return;
 
@@ -128,7 +133,7 @@ export default function AdminGoodsPage() {
     const res = await safeFetch(`${BASE}/api/goods/${id}`, {
       method: 'DELETE',
       credentials: 'include',
-    });
+    }, { throttle: true });
 
     if (res) {
       toast.success('Goods type deleted!');

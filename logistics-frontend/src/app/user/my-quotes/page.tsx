@@ -23,9 +23,11 @@ export default function MyQuotesPage() {
   useEffect(() => {
     const fetchQuotes = async () => {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const data = await safeFetch(`${BASE}/api/quotes/my`, {
-        credentials: 'include',
-      });
+      const data = await safeFetch(
+        `${BASE}/api/quotes/my`,
+        { credentials: 'include' },
+
+      );
 
       if (!data?.quotes) {
         toast.error('Please login to view your quotes');

@@ -4,7 +4,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { toast } from 'react-hot-toast';
+
+import safeFetch from '@/utils/safeFetch';
 
 // ==========================
 // Types
@@ -69,43 +70,12 @@ function DashboardContent() {
   const [latestMessages, setLatestMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const safeFetch = async <T = unknown>(url: string): Promise<T | null> => {
-    try {
-      const res = await fetch(url, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        const text = await res.text();
-        throw new Error(`❌ Non-JSON response: ${text.slice(0, 100)}...`);
-      }
-
-      const data: T = await res.json();
-
-      if (!res.ok) {
-        const errMessage =
-          (data as { message?: string })?.message ??
-          `❌ Failed to fetch ${url}`;
-        throw new Error(errMessage);
-      }
-
-      return data;
-    } catch (err) {
-      const error = err as Error;
-      console.error(`🔴 Error fetching ${url}:`, error);
-      toast.error(error.message || `Failed to load ${url}`);
-      return null;
-    }
-  };
-
   useEffect(() => {
     const fetchDashboardData = async () => {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+      // Use throttle for dashboard data (prevents spamming on fast reloads)
+      // Use debounce for endpoints that could be triggered by user input (none here)
       const [
         quotesData,
         shipmentsData,
@@ -146,8 +116,8 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <section className="p-10 flex justify-center items-center h-[50vh]">
-        <div className="text-xl font-semibold animate-pulse">
+      <section className="p-10 flex justify-center items-center h-[50vh] bg-[#1b1b1b]">
+        <div className="text-xl font-semibold animate-pulse text-[#ffcc00]">
           Loading dashboard...
         </div>
       </section>
@@ -156,7 +126,7 @@ function DashboardContent() {
 
   if (!counts) {
     return (
-      <section className="p-10 flex justify-center items-center h-[50vh]">
+      <section className="p-10 flex justify-center items-center h-[50vh] bg-[#1b1b1b]">
         <div className="text-red-500 font-semibold">
           Failed to load dashboard data.
         </div>
@@ -165,51 +135,52 @@ function DashboardContent() {
   }
 
   const dashboardData = [
-    { title: 'Total Quotes', value: counts.quotes },
-    { title: 'Total Shipments', value: counts.shipments },
-    { title: 'Total Services', value: counts.services },
-    { title: 'Total Locations', value: counts.locations },
-    { title: 'Total Messages', value: counts.messages },
-    { title: 'Goods Types', value: counts.goodsTypes },
-    { title: 'Container Types', value: counts.containerTypes },
+    { title: 'Total Quotes', value: counts.quotes, color: 'text-[#ffcc00]' },
+    { title: 'Total Shipments', value: counts.shipments, color: 'text-[#902f3c]' },
+    { title: 'Total Services', value: counts.services, color: 'text-[#ffcc00]' },
+    { title: 'Total Locations', value: counts.locations, color: 'text-[#902f3c]' },
+    { title: 'Total Messages', value: counts.messages, color: 'text-[#ffcc00]' },
+    { title: 'Goods Types', value: counts.goodsTypes, color: 'text-[#902f3c]' },
+    { title: 'Container Types', value: counts.containerTypes, color: 'text-[#ffcc00]' },
   ];
 
   return (
-    <section className="p-6 md:p-10">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+    <section className="p-6 md:p-10 bg-[#121212] min-h-screen text-white">
+      <h1 className="text-3xl font-bold mb-8 text-[#ffcc00]">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {dashboardData.map((item, index) => (
           <motion.div
             key={item.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white dark:bg-gray-800 shadow rounded-lg p-6"
+            className="bg-[#1b1b1b] rounded-lg p-6 shadow-lg border border-gray-700"
           >
-            <h2 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
+            <h2 className={`text-xl font-semibold mb-3 ${item.color}`}>
               {item.title}
             </h2>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">
-              {item.value}
-            </p>
+            <p className="text-4xl font-extrabold">{item.value}</p>
           </motion.div>
         ))}
       </div>
 
-      <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Latest Entries */}
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Latest Quotes */}
         <div>
-          <h3 className="text-xl font-semibold mb-4">Latest Quotes</h3>
+          <h3 className="text-2xl font-semibold mb-4 text-[#ffcc00]">Latest Quotes</h3>
           <ul className="space-y-3">
             {latestQuotes.map((quote) => (
               <li
                 key={quote._id}
-                className="bg-white dark:bg-gray-800 p-4 rounded shadow"
+                className="bg-[#1b1b1b] p-5 rounded shadow border border-gray-700"
               >
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Status: <strong>{quote.status}</strong>
+                <p className="text-sm text-gray-300">
+                  Status: <strong className="text-[#902f3c]">{quote.status}</strong>
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <p className="text-sm text-gray-300">
                   Payment: {quote.paymentTerm}
                 </p>
                 <p className="text-xs text-gray-500">
@@ -220,18 +191,19 @@ function DashboardContent() {
           </ul>
         </div>
 
+        {/* Latest Shipments */}
         <div>
-          <h3 className="text-xl font-semibold mb-4">Latest Shipments</h3>
+          <h3 className="text-2xl font-semibold mb-4 text-[#ffcc00]">Latest Shipments</h3>
           <ul className="space-y-3">
             {latestShipments.map((shipment) => (
               <li
                 key={shipment._id}
-                className="bg-white dark:bg-gray-800 p-4 rounded shadow"
+                className="bg-[#1b1b1b] p-5 rounded shadow border border-gray-700"
               >
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Tracking: <strong>{shipment.trackingNumber}</strong>
+                <p className="text-sm text-gray-300">
+                  Tracking: <strong className="text-[#902f3c]">{shipment.trackingNumber}</strong>
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <p className="text-sm text-gray-300">
                   Status: {shipment.status}
                 </p>
                 <p className="text-xs text-gray-500">
@@ -243,44 +215,41 @@ function DashboardContent() {
         </div>
       </div>
 
-      <div className="mt-10">
-        <h3 className="text-xl font-semibold mb-4">Latest Messages</h3>
+      {/* Latest Messages */}
+      <div className="mt-12">
+        <h3 className="text-2xl font-semibold mb-4 text-[#ffcc00]">Latest Messages</h3>
         <ul className="space-y-3">
-          {latestMessages.map((message) => (
+          {latestMessages.map((msg) => (
             <li
-              key={message._id}
-              className="bg-white dark:bg-gray-800 p-4 rounded shadow"
+              key={msg._id}
+              className="bg-[#1b1b1b] p-5 rounded shadow border border-gray-700 flex justify-between items-center"
             >
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                From: <strong>{message.name}</strong> | Subject: {message.subject}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Status: {message.status}
-              </p>
-              <p className="text-xs text-gray-500">
-                Received: {new Date(message.createdAt).toLocaleString()}
-              </p>
+              <div>
+                <p className="font-semibold text-lg text-[#902f3c]">{msg.subject}</p>
+                <p className="text-sm text-gray-300">From: {msg.name}</p>
+                <p className="text-xs text-gray-500">Status: {msg.status}</p>
+              </div>
+              <Link
+                href={`/admin/messages/${msg._id}`}
+                className="text-[#ffcc00] hover:underline font-semibold"
+              >
+                View
+              </Link>
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="mt-10 text-right">
-        <Link href="/admin/quotes">
-          <span className="text-blue-600 hover:underline">View all quotes →</span>
-        </Link>
       </div>
     </section>
   );
 }
 
 // ==========================
-// Protected Page Wrapper
+// Page Export
 // ==========================
 
 export default function AdminDashboardPage() {
   return (
-    <ProtectedRoute adminOnly>
+    <ProtectedRoute>
       <DashboardContent />
     </ProtectedRoute>
   );

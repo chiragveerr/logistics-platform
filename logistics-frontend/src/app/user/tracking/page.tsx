@@ -28,7 +28,7 @@ function TrackingContent() {
 
   const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  // 🛩️ Fetch user shipments
+  // 🛩️ Fetch user shipments (throttled)
   useEffect(() => {
     const fetchUserShipments = async () => {
       const data = await safeFetch(`${BASE}/api/shipments`, {
@@ -43,7 +43,7 @@ function TrackingContent() {
     fetchUserShipments();
   }, [BASE]);
 
-  // 🛰️ Fetch tracking events
+  // 🛰️ Fetch tracking events (throttled)
   const fetchEvents = async () => {
     if (!shipmentId.trim()) {
       setError('⚠️ Please select a shipment');
@@ -55,7 +55,7 @@ function TrackingContent() {
 
     const data = await safeFetch(`${BASE}/api/tracking/${shipmentId}`, {
       credentials: 'include',
-    });
+    }, { throttle: true });
 
     if (data?.events) {
       setEvents(data.events);

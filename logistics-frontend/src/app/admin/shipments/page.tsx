@@ -66,12 +66,13 @@ function ShipmentsContent() {
       try {
         const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+        // Throttle all fetches to prevent spamming
         const [shipmentsData, locationsData, quotesData, goodsData, containersData] = await Promise.all([
-          safeFetch(`${BASE}/api/shipments`),
-          safeFetch(`${BASE}/api/locations?showAll=true`),
-          safeFetch(`${BASE}/api/quotes`),
-          safeFetch(`${BASE}/api/goods?showAll=true`),
-          safeFetch(`${BASE}/api/containers?showAll=true`),
+          safeFetch(`${BASE}/api/shipments`,),
+          safeFetch(`${BASE}/api/locations?showAll=true`,),
+          safeFetch(`${BASE}/api/quotes`,),
+          safeFetch(`${BASE}/api/goods?showAll=true`,),
+          safeFetch(`${BASE}/api/containers?showAll=true`,),
         ]);
 
         setShipments(shipmentsData?.shipments || []);
@@ -110,7 +111,7 @@ function ShipmentsContent() {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newShipment),
-      });
+      }, {debounce : true});
 
       if (data?.shipment) {
         setShipments((prev) => [...prev, data.shipment]);
@@ -136,7 +137,7 @@ function ShipmentsContent() {
     const res = await safeFetch(`${BASE}/api/shipments/${id}`, {
       method: 'DELETE',
       credentials: 'include',
-    });
+    }, {throttle: true});
 
     if (res) {
       setShipments((prev) => prev.filter((s) => s._id !== id));
@@ -151,7 +152,7 @@ function ShipmentsContent() {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),
-    });
+    }, {throttle: true});
 
     if (res) {
       setShipments((prev) =>

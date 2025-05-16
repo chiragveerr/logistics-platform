@@ -35,12 +35,15 @@ function ServicesContent() {
   const [newService, setNewService] = useState({ name: '', description: '' });
   const [customServiceMode, setCustomServiceMode] = useState(false);
 
+  // Throttle fetchServices to prevent spamming on reloads
   useEffect(() => {
     const fetchServices = async () => {
       try {
         const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const data = await safeFetch(`${BASE}/api/services`);
-        setServices(data.services || []);
+        const data = await safeFetch<{ services: Service[] }>(
+          `${BASE}/api/services`
+        );
+        setServices(data?.services || []);
       } catch (err: unknown) {
         const error = err as Error;
         toast.error(error.message || 'Failed to load services');
@@ -51,6 +54,7 @@ function ServicesContent() {
     fetchServices();
   }, []);
 
+  // Debounce create to prevent double submit
   const handleCreateService = async () => {
     const { name, description } = newService;
 
@@ -63,29 +67,40 @@ function ServicesContent() {
 
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const data = await safeFetch(`${BASE}/api/services`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newService),
-      });
+      const data = await safeFetch<{ service: Service }>(
+        `${BASE}/api/services`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newService),
+        },
+        { debounce: true }
+      );
 
-      setServices((prev) => [...prev, data.service]);
-      setNewService({ name: '', description: '' });
-      setCustomServiceMode(false);
+      if (data) {
+        setServices((prev) => [...prev, data.service]);
+        setNewService({ name: '', description: '' });
+        setCustomServiceMode(false);
+      }
       toast.success('Service created');
     } catch {
       toast.error('Error creating service');
     }
   };
 
+  // Throttle delete to prevent rapid delete clicks
   const handleDeleteService = async (id: string) => {
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      await safeFetch(`${BASE}/api/services/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+      await safeFetch(
+        `${BASE}/api/services/${id}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        },
+        { throttle: true }
+      );
 
       setServices((prev) => prev.filter((service) => service._id !== id));
       toast.success('Service deleted');
@@ -94,15 +109,20 @@ function ServicesContent() {
     }
   };
 
+  // Throttle status update to prevent rapid toggling
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      await safeFetch(`${BASE}/api/services/${id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      await safeFetch(
+        `${BASE}/api/services/${id}`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        },
+        { throttle: true }
+      );
 
       setServices((prev) =>
         prev.map((service) =>

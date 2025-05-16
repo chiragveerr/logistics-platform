@@ -19,6 +19,7 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+      // Throttle user profile fetch
       const userData = await safeFetch(`${BASE}/api/users/profile`, {
         credentials: 'include',
       });
@@ -31,11 +32,13 @@ export default function DashboardPage() {
 
       setUserName(userData.user.name);
 
+      // Throttle quotes fetch
       const quoteData = await safeFetch(`${BASE}/api/quotes/my`, {
         credentials: 'include',
       });
       setQuoteCount(quoteData?.quotes?.length || 0);
 
+      // Throttle shipments fetch
       const shipmentData = await safeFetch(`${BASE}/api/shipments`, {
         credentials: 'include',
       });

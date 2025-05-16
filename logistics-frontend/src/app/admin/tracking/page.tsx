@@ -44,6 +44,7 @@ export default function AdminTrackingPage() {
     remarks: '',
   });
 
+  // Throttle fetchShipments to prevent spamming
   const fetchShipments = async () => {
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -54,12 +55,13 @@ export default function AdminTrackingPage() {
     }
   };
 
+  // Throttle fetchTrackingEvents to prevent spamming
   const fetchTrackingEvents = async () => {
     if (!shipmentId) return toast.error('Select a shipment first');
     setLoading(true);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const data = await safeFetch(`${BASE}/api/tracking/${shipmentId}`);
+      const data = await safeFetch(`${BASE}/api/tracking/${shipmentId}`, undefined, { throttle: true });
       setEvents(data.events || []);
     } catch {
       toast.error('Failed to fetch tracking events');
@@ -68,6 +70,7 @@ export default function AdminTrackingPage() {
     }
   };
 
+  // Debounce create event to prevent double submit
   const handleCreateEvent = async () => {
     const { event, location, status, eventTime } = newEvent;
     if (!shipmentId || !event || !location || !status || !eventTime) {
@@ -81,7 +84,7 @@ export default function AdminTrackingPage() {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...newEvent, shipment: shipmentId }),
-      });
+      }, { debounce: true });
 
       if (!data?.trackingEvent) throw new Error('Creation failed');
 

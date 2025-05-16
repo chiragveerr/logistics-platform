@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import safeFetch from '@/utils/safeFetch';
 
 interface Quote {
   _id: string;
@@ -23,18 +24,15 @@ function QuotesContent() {
   const [loading, setLoading] = useState(true);
   const [finalPrices, setFinalPrices] = useState<{ [key: string]: string }>({});
 
+  // Throttle fetchQuotes to prevent spamming on reloads
   useEffect(() => {
     const fetchQuotes = async () => {
       try {
         const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const res = await fetch(`${BASE}/api/quotes`, {
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch quotes');
-        const data = await res.json();
-        setQuotes(data.quotes || []);
+        const data = await safeFetch<{ quotes: Quote[] }>(
+          `${BASE}/api/quotes`,
+        );
+        setQuotes(data?.quotes || []);
       } catch (error: unknown) {
         const err = error as Error;
         console.error('Error fetching quotes:', err.message);
@@ -47,17 +45,22 @@ function QuotesContent() {
     fetchQuotes();
   }, []);
 
+  // Debounce update to prevent rapid status/price updates
   const handleUpdate = async (id: string, newStatus: string, finalPrice?: number) => {
     try {
       const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const res = await fetch(`${BASE}/api/quotes/${id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, finalQuoteAmount: finalPrice }),
-      });
+      const res = await safeFetch(
+        `${BASE}/api/quotes/${id}`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus, finalQuoteAmount: finalPrice }),
+        },
+        { debounce: true }
+      );
 
-      if (!res.ok) throw new Error('Failed to update quote');
+      if (!res) throw new Error('Failed to update quote');
 
       const updatedQuotes = quotes.map((quote) =>
         quote._id === id ? { ...quote, status: newStatus, finalQuoteAmount: finalPrice } : quote

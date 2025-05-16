@@ -46,6 +46,7 @@ export default function AdminLocationsPage(): JSX.Element {
     coordinates: ['', ''],
   });
 
+  // Throttle fetchLocations to prevent spamming on filter change
   const fetchLocations = useCallback(async () => {
     const res = await safeFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`);
     if (!res?.locations) return;
@@ -65,6 +66,7 @@ export default function AdminLocationsPage(): JSX.Element {
     fetchLocations().finally(() => setLoading(false));
   }, [fetchLocations]);
 
+  // Debounce create to prevent double submit
   const handleCreateLocation = async (): Promise<void> => {
     const { name, type, country, city, address, postalCode, coordinates } = newLocation;
 
@@ -88,12 +90,16 @@ export default function AdminLocationsPage(): JSX.Element {
       parseFloat(coordinates[1]),
     ];
 
-    const res = await safeFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ ...newLocation, coordinates: formattedCoordinates }),
-    });
+    const res = await safeFetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ...newLocation, coordinates: formattedCoordinates }),
+      },
+      { debounce: true }
+    );
 
     if (res?.location) {
       setLocations((prev) => [...prev, res.location]);
@@ -110,11 +116,16 @@ export default function AdminLocationsPage(): JSX.Element {
     }
   };
 
+  // Throttle delete to prevent rapid delete clicks
   const handleDeleteLocation = async (id: string): Promise<void> => {
-    const res = await safeFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
+    const res = await safeFetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+      },
+      { throttle: true }
+    );
 
     if (res?.success) {
       setLocations((prev) => prev.filter((loc) => loc._id !== id));
@@ -122,13 +133,18 @@ export default function AdminLocationsPage(): JSX.Element {
     }
   };
 
+  // Throttle status update to prevent rapid toggling
   const handleUpdateStatus = async (id: string, newStatus: 'active' | 'inactive'): Promise<void> => {
-    const res = await safeFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    });
+    const res = await safeFetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`,
+      {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      },
+      { throttle: true }
+    );
 
     if (res?.success) {
       setLocations((prev) =>
