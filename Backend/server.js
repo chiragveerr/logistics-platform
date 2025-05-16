@@ -26,7 +26,8 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 const allowedOrigins = [
-  'https://alaudin-logistic.vercel.app', 
+  'https://alaudin-logistic.vercel.app',
+  'https://logistics-platform-eta.vercel.app', // <-- add this line
   'http://localhost:3000'
 ];
 
