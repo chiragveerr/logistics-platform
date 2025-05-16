@@ -17,13 +17,14 @@ const sidebarLinks = [
 ];
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+    const pathname = usePathname();
   const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/users/profile', {
+        const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const res = await fetch(`${BASE}/api/users/profile`, {
           credentials: 'include',
         });
 
