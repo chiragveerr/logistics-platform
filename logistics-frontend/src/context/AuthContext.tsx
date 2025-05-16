@@ -3,11 +3,17 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 // Define a User type (customize fields as needed)
-interface User {
-  id: string;
+export interface User {
+  id: string; // frontend uses 'id', backend sends '_id'
+  _id?: string; // optional, for flexibility
   name?: string;
   email?: string;
-  // Add other user properties here
+  phone?: string;
+  companyName?: string;
+  address?: string;
+  role: 'customer' | 'admin';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AuthContextType {
