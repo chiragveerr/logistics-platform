@@ -7,11 +7,11 @@ const sendTokenResponse = (user, statusCode, res) => {
 
   // 🧁 Cookie options
   const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // only over HTTPS
-    sameSite: "Strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  };
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // only over HTTPS
+  sameSite: "None", // <-- CHANGE THIS
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
 
   // 🎁 Response
   res

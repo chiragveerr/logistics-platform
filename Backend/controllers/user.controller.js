@@ -174,13 +174,13 @@ export const updateUserProfile = async (req, res) => {
  * @access Private
  */
 export const logoutUser = (req, res) => {
-  res
-    .cookie("token", "", {
-      httpOnly: true,
-      expires: new Date(0),
-      sameSite: "Strict",
-      secure: process.env.NODE_ENV === "production",
-    })
-    .status(200)
-    .json({ success: true, message: "Logged out successfully." });
+ res
+  .cookie("token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    sameSite: "None", 
+    secure: process.env.NODE_ENV === "production",
+  })
+  .status(200)
+  .json({ success: true, message: "Logged out successfully." });
 };

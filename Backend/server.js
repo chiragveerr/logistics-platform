@@ -25,9 +25,21 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+const allowedOrigins = [
+  'https://your-frontend.vercel.app', 
+  'http://localhost:3000'
+];
+
 // 🧠 Global Middlewares
 app.use(cookieParser());
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(helmet()); // Secure HTTP headers
 app.use(compression()); // Response compression
